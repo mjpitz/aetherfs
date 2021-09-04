@@ -1,0 +1,26 @@
+project_name: aetherfs
+
+snapshot:
+  name_template: "{{ .ShortCommit }}"
+
+builds:
+  - id: aetherfs
+    main: ./main.go
+    binary: aetherfs
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    hooks:
+      post: make .proto-tar VERSION={{ .Version }}
+
+archives:
+  - id: aetherfs
+    name_template: "aetherfs_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - aetherfs
+
+checksum:
+  name_template: 'aetherfs_checksums.txt'

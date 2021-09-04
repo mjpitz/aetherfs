@@ -9,7 +9,7 @@ FROM ubuntu:21.04
 ARG GO_VERSION=1.16.4
 ARG PROTOC_VERSION=3.15.7
 
-RUN apt-get update -y && apt-get install -y curl unzip gnupg2
+RUN apt-get update -y && apt-get install -y curl unzip gnupg2 git build-essential
 
 RUN curl -sSLo go.tar.gz https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -zxf go.tar.gz && \
@@ -31,4 +31,5 @@ RUN GOBIN=/usr/local/bin go get \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.5.0 \
     google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
     google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0 \
-    github.com/envoyproxy/protoc-gen-validate@v0.6.1
+    github.com/envoyproxy/protoc-gen-validate@v0.6.1 \
+    github.com/goreleaser/goreleaser@v0.177.0

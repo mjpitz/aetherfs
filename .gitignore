@@ -1,4 +1,5 @@
 /api/
+/dist/
 /gen/
 /vendor/
 /docs/openapiv2/
