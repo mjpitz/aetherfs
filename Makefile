@@ -23,3 +23,7 @@ gen: .gen
 .gen:
 	@rm -rf api gen
 	docker run --rm -it -v $(CWD):/home -w /home $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools sh -c 'buf lint && buf generate'
+
+legal: .legal
+.legal:
+	addlicense -f ./legal/header.txt -skip yaml .
