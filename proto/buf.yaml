@@ -1,11 +1,7 @@
-version: v1beta1
+version: v1
 
 deps:
   - buf.build/googleapis/googleapis
-
-build:
-  roots:
-    - proto
 
 lint:
   use:
