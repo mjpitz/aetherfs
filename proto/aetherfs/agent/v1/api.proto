@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package aetherfs.agent.v1;
+
+import "aetherfs/dataset/v1/tag.proto";
+import "google/api/annotations.proto";
+
+option csharp_namespace = "AetherFS.Agent.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1;agentv1";
+option java_package = "tech.aetherfs.agent.v1";
+option java_outer_classname = "APIProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// PublishRequest instructs the agent to publish the dataset found at the provided path with the associated tags.
+message PublishRequest {
+  string path = 1;
+  repeated aetherfs.dataset.v1.Tag tags = 2;
+}
+
+// PublishResponse
+message PublishResponse {
+}
+
+// SubscribeRequest is used to programmatically subscribe to dataset updates. Consumers can use this to get notified of
+// when new versions of datasets become available.
+message SubscribeRequest {
+  aetherfs.dataset.v1.Tag tag = 1;
+  bool cancel = 2;
+}
+
+// SubscribeResponse
+message SubscribeResponse {
+  aetherfs.dataset.v1.Tag tag = 1;
+  string path = 2;
+}
+
+// GracefulShutdownRequest is used to initiate a graceful shutdown of the agent process. This will wait for all
+// published datasets to be replicated before shutting down.
+message GracefulShutdownRequest {}
+
+message GracefulShutdownResponse {}
+
+// AgentAPI defines a set of operations that a client application can perform when speaking to an agent.
+service AgentAPI {
+  rpc Publish(PublishRequest) returns (PublishResponse) {
+    option (google.api.http) = {
+      post: "/v1/agent/publish"
+      body: "*"
+    };
+  }
+
+  rpc Subscribe(stream SubscribeRequest) returns (stream SubscribeResponse) {}
+
+  rpc GracefulShutdown(GracefulShutdownRequest) returns (GracefulShutdownResponse) {
+    option (google.api.http) = {
+      post: "/v1/agent/shutdown"
+      body: "*"
+    };
+  }
+}

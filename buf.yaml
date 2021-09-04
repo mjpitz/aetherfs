@@ -1,0 +1,21 @@
+version: v1beta1
+
+deps:
+  - buf.build/googleapis/googleapis
+
+build:
+  roots:
+    - proto
+
+lint:
+  use:
+    - DEFAULT
+  enum_zero_value_suffix: _INVALID
+  service_suffix: API
+
+breaking:
+  use:
+    - FILE
+    - PACKAGE
+    - WIRE
+    - WIRE_JSON

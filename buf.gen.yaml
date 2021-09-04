@@ -1,0 +1,39 @@
+version: v1beta1
+
+plugins:
+  - name: go
+    out: api
+    opt:
+      - paths=source_relative
+
+  - name: go-grpc
+    out: api
+    opt:
+      - paths=source_relative
+
+  - name: grpc-gateway
+    out: api
+    opt:
+      - paths=source_relative
+      - generate_unbound_methods=true
+
+  - name: openapiv2
+    out: docs/openapiv2
+
+    # NOTE: I currently do not need the block of configuration below, but should someone
+#
+#  - name: cpp
+#    out: gen/proto/cpp/src
+#  - name: java
+#    out: gen/proto/java/src
+#  - name: python
+#    out: gen/proto/python
+#  - name: csharp
+#    out: gen/proto/csharp
+#    opt:
+#      - base_namespace=    # empty, otherwise the proper directory structure isn't created
+#  - name: js
+#    out: gen/proto/js
+#    opt:
+#      - import_style=commonjs
+#      - binary

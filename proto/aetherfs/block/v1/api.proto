@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package aetherfs.block.v1;
+
+import "google/api/annotations.proto";
+
+option csharp_namespace = "AetherFS.Block.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/block/v1;blockv1";
+option java_package = "tech.aetherfs.block.v1";
+option java_outer_classname = "APIProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// LookupRequest is used to quickly check to see if a block exists for the given signature. This is used to
+// short-circuit uploads for blocks that already exist and do not need to be uploaded.
+message LookupRequest {
+  string signature = 1;
+}
+
+message LookupResponse {}
+
+// DownloadRequest is used to download parts of or entire blocks from our backend store. Blocks are cached amongst
+// cluster peers in smaller pieces.
+// DownloadRequests streams parts of a semi-large file from the server during a download. Blocks are cached amongst
+// cluster peers, typically in smaller parts to have better cache performance.
+message DownloadRequest {
+  string signature = 1; // the id of the block to download
+  uint64 offset = 2;    // an offset within the block
+  uint64 size = 3;      // the number of bytes to read from a block (0 will read the remainder of the block)
+}
+
+message DownloadResponse {
+  bytes part = 1; // a part of the block we're downloading
+}
+
+// UploadRequest streams parts of a semi-large file to the server during an upload.
+message UploadRequest {
+  bytes part = 1; // a part of the block we're uploading
+}
+
+message UploadResponse {
+  string signature = 1; // the id of the block that was uploaded
+}
+
+// BlockAPI manages the blocks that we store in S3. Blocks are cacheable units of content that can be shared amongst
+// peers in the cluster. These blocks might be duplicated between dataset tags and even datasets.
+service BlockAPI {
+  rpc Lookup(LookupRequest) returns (LookupResponse) {
+    option (google.api.http) = {
+      custom: {
+        kind: "HEAD"
+        path: "/v1/block/{signature}"
+      }
+    };
+  }
+
+  rpc Download(DownloadRequest) returns (stream DownloadResponse) {
+    option (google.api.http) = {
+      get: "/v1/block/{signature}"
+    };
+  }
+
+  rpc Upload(stream UploadRequest) returns (UploadResponse) {
+    option (google.api.http) = {
+      post: "/v1/block"
+      body: "*"
+    };
+  }
+}

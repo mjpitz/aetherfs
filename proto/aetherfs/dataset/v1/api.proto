@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package aetherfs.dataset.v1;
+
+import "aetherfs/dataset/v1/dataset.proto";
+import "aetherfs/dataset/v1/tag.proto";
+import "google/api/annotations.proto";
+
+option csharp_namespace = "AetherFS.Dataset.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1;datasetv1";
+option java_package = "tech.aetherfs.dataset.v1";
+option java_outer_classname = "APIProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// ListRequest lists all datasets the authenticated user has access to.
+message ListRequest {
+  string page_token = 1; // the token used to manage pagination.
+  uint32 page_size = 2;  // the number of results to include in the page.
+}
+
+message ListResponse {
+  string next_page_token = 1;   // the token associated with the start of the next page.
+  repeated string datasets = 2; // the list of datasets for the current page.
+}
+
+// ListTagsRequest lists all tags for a given dataset the authenticated user as access to.
+message ListTagsRequest {
+  string name = 1;       // the name of the dataset.
+  string page_token = 2; // the token used to manage pagination.
+  uint32 page_size = 3;  // the number of results to include in the page.
+}
+
+message ListTagsResponse {
+  string next_page_token = 1; // the token associated with the start of the next page.
+  repeated Tag tags = 2;      // the list of tags for the current page.
+}
+
+// LookupRequest resolves the dataset information for a given tag.
+message LookupRequest {
+  Tag tag = 1;
+}
+
+message LookupResponse {
+  Dataset dataset = 1;
+}
+
+// PublishRequest updates all provided tags to use the new version of dataset.
+message PublishRequest {
+  Dataset dataset = 1;
+  repeated Tag tags = 2;
+}
+
+// PublishResponse
+message PublishResponse {
+}
+
+// SubscribeRequest instructs the agent to subscribe to a dataset at some scope.
+message SubscribeRequest {
+  Tag tag = 1;
+  bool cancel = 2;
+}
+
+// SubscribeResponse is returned any time a new version of a dataset becomes available.
+message SubscribeResponse {
+  Tag tag = 1;
+  Dataset dataset = 2;
+}
+
+// DatasetAPI provides functionality for being able to publish and consume datasets programmatically. This API is used
+// in conjunction with the BlockAPI to resolve all information for a dataset.
+service DatasetAPI {
+  rpc List(ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      get: "/v1/datasets"
+    };
+  }
+
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {
+    option (google.api.http) = {
+      get: "/v1/datasets/{name}/tags"
+    };
+  }
+
+  rpc Lookup(LookupRequest) returns (LookupResponse) {
+    option (google.api.http) = {
+      get: "/v1/datasets/{tag.name}/tags/{tag.version}"
+    };
+  }
+
+  rpc Publish(PublishRequest) returns (PublishResponse) {
+    option (google.api.http) = {
+      post: "/v1/datasets"
+      body: "*"
+    };
+  }
+
+  rpc Subscribe(stream SubscribeRequest) returns (stream SubscribeResponse) {}
+}

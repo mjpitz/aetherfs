@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package aetherfs.dataset.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "AetherFS.Dataset.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1;datasetv1";
+option java_package = "tech.aetherfs.dataset.v1";
+option java_outer_classname = "FileProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// File describes a filesystem file that is replicated using AetherFS.
+message File {
+  string name = 1;                             // name of the file (including directories)
+  uint64 size = 2;                             // size in bytes
+  google.protobuf.Timestamp last_modified = 3; // time of last modification
+}

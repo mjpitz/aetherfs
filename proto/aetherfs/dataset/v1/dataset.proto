@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package aetherfs.dataset.v1;
+
+import "aetherfs/dataset/v1/file.proto";
+
+option csharp_namespace = "AetherFS.Dataset.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1;datasetv1";
+option java_package = "tech.aetherfs.dataset.v1";
+option java_outer_classname = "DatasetProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// Dataset describes a collection of data that is spread across multiple files. Files in
+// a dataset are broken into blocks to make caching and sharing parts easier.
+message Dataset {
+  repeated File files = 1;    // manifest of files within the dataset
+  uint32 block_size = 2;      // maximum size of the blocks in bytes
+  repeated string blocks = 3; // a list of block signatures
+}

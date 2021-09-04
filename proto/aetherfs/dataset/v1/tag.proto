@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package aetherfs.dataset.v1;
+
+option csharp_namespace = "AetherFS.Dataset.V1";
+option go_package = "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1;datasetv1";
+option java_package = "tech.aetherfs.dataset.v1";
+option java_outer_classname = "TagProto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+// Tag identifies a version of a dataset in AetherFS.
+message Tag {
+  string name = 1;    // name and optional scope of the dataset (example: @scope/name)
+  string version = 2; // the version of the dataset (example: qa, prod, latest, v21.09, etc)
+}
