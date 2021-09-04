@@ -24,3 +24,5 @@ archives:
 
 checksum:
   name_template: 'aetherfs_checksums.txt'
+  extra_files:
+    - glob: "**/aetherfs_proto.tar.gz"
