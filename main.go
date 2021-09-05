@@ -38,11 +38,11 @@ func main() {
 	}
 
 	if version == "" {
-		version = "dev"
+		version = "none"
 	}
 
 	if commit == "" {
-		commit = "HEAD"
+		commit = "none"
 	}
 
 	logLevel := zapcore.InfoLevel

@@ -12,8 +12,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Parse parses the contents of the authors file. The file is format based on Google's open source guidelines. For more
-// information, see https://opensource.google/docs/releasing/authors/
+// Parse parses the contents of an AUTHORS file. An AUTHORS file is a plaintext file whose contents details the primary
+// contributors to the project. Each line in the file contains either a comment (denoted by the pound symbol, "#") or
+// an author. Each author line should contain the name of the contributor and an optional email address. The format for
+// and author line is "name <email>". For more information, see the AUTHORS file for this project.
 func Parse(contents string) []*cli.Author {
 	lines := strings.Split(contents, "\n")
 	results := make([]*cli.Author, 0, len(lines))
