@@ -15,9 +15,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/authors"
+	"github.com/mjpitz/aetherfs/internal/commands"
 )
 
 //go:embed AUTHORS
@@ -41,55 +45,48 @@ func main() {
 		commit = "HEAD"
 	}
 
+	logLevel := zapcore.InfoLevel
+	logFormat := "json"
+
 	app := &cli.App{
-		Name:        "aetherfs",
-		Usage:       "A publish once, consume many file system for small to medium datasets",
-		UsageText:   "aetherfs <command>",
-		Version:     fmt.Sprintf("%s (%s)", version, commit),
+		Name:      "aetherfs",
+		Usage:     "A publish once, consume many file system for small to medium datasets",
+		UsageText: "aetherfs <command>",
+		Version:   fmt.Sprintf("%s (%s)", version, commit),
 		Commands: []*cli.Command{
-			{
-				Name:      "agent",
-				Usage:     "Starts the aetherfs-agent process",
-				UsageText: "aetherfs agent [options]",
-				Action: func(ctx *cli.Context) error {
-					log.Print("running agent")
-					<-ctx.Done()
-					return nil
-				},
+			commands.Agent(),
+			commands.Pull(),
+			commands.Push(),
+			commands.Server(),
+		},
+		Flags: []cli.Flag{
+			&cli.GenericFlag{
+				Name:    "log-level",
+				Usage:   "the verbosity of logs",
+				Value:   &logLevel,
+				EnvVars: []string{"LOG_LEVEL"},
 			},
-			{
-				Name:      "server",
-				Usage:     "Starts the aetherfs-server process",
-				UsageText: "aetherfs server [options]",
-				Action: func(ctx *cli.Context) error {
-					log.Print("running server")
-					<-ctx.Done()
-					return nil
-				},
-			},
-			{
-				Name:      "push",
-				Usage:     "Pushes a dataset into AetherFS",
-				UsageText: "aetherfs push [options] <path>",
-				Action: func(ctx *cli.Context) error {
-					log.Print("pushing dataset")
-					return nil
-				},
-			},
-			{
-				Name:      "pull",
-				Usage:     "Pulls a dataset from AetherFS",
-				UsageText: "aetherfs pull [options] <dataset> [path]",
-				Action: func(ctx *cli.Context) error {
-					log.Print("pulling dataset")
-					return nil
-				},
+			&cli.StringFlag{
+				Name:        "log-format",
+				Usage:       "how logs should be format",
+				Destination: &logFormat,
+				Value:       logFormat,
+				EnvVars:     []string{"LOG_FORMAT"},
 			},
 		},
-		Flags: []cli.Flag{},
 		Before: func(ctx *cli.Context) error {
+			cfg := zap.NewProductionConfig()
+			cfg.Level.SetLevel(logLevel)
+			cfg.Encoding = logFormat
+
+			logger, err := cfg.Build()
+			if err != nil {
+				return err
+			}
+
 			var cancel context.CancelFunc
 			ctx.Context, cancel = context.WithCancel(ctx.Context)
+			ctx.Context = ctxzap.ToContext(ctx.Context, logger)
 
 			halt := make(chan os.Signal, 1)
 			signal.Notify(halt, syscall.SIGINT, syscall.SIGTERM)
@@ -98,6 +95,7 @@ func main() {
 				<-halt
 				signal.Stop(halt)
 
+				logger.Info("shutting down")
 				cancel()
 			}()
 
@@ -112,8 +110,11 @@ func main() {
 		},
 		Compiled:  compiled,
 		Authors:   authors.Parse(authorsFileContents),
-		Copyright: fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved", compiled.Year()),
+		Copyright: fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved\n", compiled.Year()),
 	}
 
-	_ = app.Run(os.Args)
+	err = app.Run(os.Args)
+	if err != nil {
+		log.Print(err)
+	}
 }
