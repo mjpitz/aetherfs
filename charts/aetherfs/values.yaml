@@ -1,0 +1,78 @@
+dex:
+  # -- deploy dex
+  enabled: true
+
+  config:
+    # The base path of dex and the external name of the OpenID Connect service.
+    # This is the canonical URL that all clients MUST use to refer to dex. If a
+    # path is provided, dex's HTTP service will listen at a non-root URL.
+    issuer: http://127.0.0.1:5556
+
+    # Configuration for dex appearance
+    frontend:
+      issuer: AetherFS
+      theme: dark
+
+    # The storage configuration determines where dex stores its state. Supported
+    # options include SQL flavors and Kubernetes third party resources.
+    #
+    # See the documentation (https://dexidp.io/docs/storage/) for further information.
+    storage:
+      type: sqlite3
+      config:
+        file: ":memory:"
+
+      # type: mysql
+      # config:
+      #   host: localhost
+      #   port: 3306
+      #   database: dex
+      #   user: mysql
+      #   password: mysql
+      #   ssl:
+      #     mode: "false"
+
+      # type: postgres
+      # config:
+      #   host: localhost
+      #   port: 5432
+      #   database: dex
+      #   user: postgres
+      #   password: postgres
+      #   ssl:
+      #     mode: disable
+
+      # type: etcd
+      # config:
+      #   endpoints:
+      #     - http://localhost:2379
+      #   namespace: dex/
+
+      # type: kubernetes
+      # config:
+      #   kubeConfigFile: $HOME/.kube/config
+
+    # A list of identity connectors that allow users to login using an existing identity provider.
+    #
+    # See the documentation (https://dexidp.io/docs/connectors/) for further information.
+    connectors:
+      - id: mock
+        name: Example
+        type: mockCallback
+
+    # A list of client applications authorized for communication with dex (otherwise, uses storage)
+    staticClients:
+      - id: aetherfs
+        name: 'AetherFS'
+        redirectURIs:
+          - 'http://127.0.0.1:5555/callback'
+        secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+
+    # list of passwords to login by end user (otherwise, uses storage)
+    enablePasswordDB: true
+    staticPasswords:
+      - email: "admin@aetherfs.tech"
+        # bcrypt hash of the string "password": $(echo password | htpasswd -BinC 10 admin | cut -d: -f2)
+        hash: "$2y$10$hldTTPzEsvVMcZlSx7KQIeOnu3LNqt6BZsNQaweul40i81o9KEKTW"
+        username: "admin"
+        userID: "430D8A58-53EF-4DD8-93F1-D818AC18010E"
