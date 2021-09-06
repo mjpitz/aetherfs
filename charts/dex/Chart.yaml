@@ -1,9 +1,9 @@
 apiVersion: v2
 type: application
-name: aetherfs
-description: A Helm chart for Kubernetes
-version: 0.1.0
-appVersion: "1.16.0"
+name: dex
+description: A Helm chart for deploying Dex, a federated identity provider.
+version: 0.0.0
+appVersion: 0.0.0
 dependencies:
   - repository: https://charts.dexidp.io
     name: dex

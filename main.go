@@ -9,7 +9,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,12 +16,19 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
+	"github.com/mjpitz/aetherfs/internal/flagset"
+	"github.com/mjpitz/aetherfs/internal/logger"
 )
+
+type GlobalConfig struct {
+	Log    logger.Config `json:"log,omitempty"`
+	State  string        `json:"state,omitempty"  usage:"location where AetherFS can write small amounts of data"`
+	Config string        `json:"config,omitempty" usage:"location of the client configuration file"`
+}
 
 //go:embed AUTHORS
 var authorsFileContents string
@@ -46,7 +52,13 @@ func main() {
 	}
 
 	logLevel := zapcore.InfoLevel
-	logFormat := "json"
+	cfg := &GlobalConfig{
+		Log: logger.Config{
+			Level:  &logLevel,
+			Format: "json",
+		},
+		State: "/usr/local/aetherfs",
+	}
 
 	app := &cli.App{
 		Name:      "aetherfs",
@@ -61,34 +73,18 @@ func main() {
 			commands.Push(),
 			commands.Server(),
 		},
-		Flags: []cli.Flag{
-			&cli.GenericFlag{
-				Name:    "log-level",
-				Usage:   "the verbosity of logs",
-				Value:   &logLevel,
-				EnvVars: []string{"LOG_LEVEL"},
-			},
-			&cli.StringFlag{
-				Name:        "log-format",
-				Usage:       "how logs should be format",
-				Destination: &logFormat,
-				Value:       logFormat,
-				EnvVars:     []string{"LOG_FORMAT"},
-			},
-		},
+		Flags: flagset.Extract(cfg),
 		Before: func(ctx *cli.Context) error {
-			cfg := zap.NewProductionConfig()
-			cfg.Level.SetLevel(logLevel)
-			cfg.Encoding = logFormat
-
-			logger, err := cfg.Build()
+			log, err := logger.Setup(cfg.Log)
 			if err != nil {
 				return err
 			}
 
+			log.Debug("before")
+
 			var cancel context.CancelFunc
 			ctx.Context, cancel = context.WithCancel(ctx.Context)
-			ctx.Context = ctxzap.ToContext(ctx.Context, logger)
+			ctx.Context = ctxzap.ToContext(ctx.Context, log)
 
 			halt := make(chan os.Signal, 1)
 			signal.Notify(halt, syscall.SIGINT, syscall.SIGTERM)
@@ -97,7 +93,7 @@ func main() {
 				<-halt
 				signal.Stop(halt)
 
-				logger.Info("shutting down")
+				log.Info("shutting down")
 				cancel()
 			}()
 
@@ -108,6 +104,7 @@ func main() {
 			//   - destroy outgoing connections
 			//   - ensure db files are closed
 			//   - etc
+			ctxzap.Extract(ctx.Context).Debug("after")
 			return nil
 		},
 		Compiled:  compiled,
@@ -117,6 +114,6 @@ func main() {
 
 	err = app.Run(os.Args)
 	if err != nil {
-		log.Print(err)
+		fmt.Println(err)
 	}
 }

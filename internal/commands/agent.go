@@ -11,7 +11,9 @@ import (
 
 // AgentConfig encapsulates the requirements for configuring and starting up the Agent process.
 type AgentConfig struct {
-	OIDCIssuer auth.OIDCIssuer `json:"oidc_issuer,omitempty"`
+	OIDC struct {
+		Issuer auth.OIDCIssuer `json:"issuer,omitempty"`
+	} `json:"oidc,omitempty"`
 }
 
 // Agent returns a cli.Command that can be added to an existing application.

@@ -129,7 +129,7 @@ func extract(prefix []string, v interface{}) []cli.Flag {
 
 		// recursive field types
 		switch fieldValue.Kind() {
-		case reflect.Ptr, reflect.Struct:
+		case reflect.Struct:
 			pre := prefix
 			if name != "" {
 				pre = append(pre, name)

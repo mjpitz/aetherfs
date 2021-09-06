@@ -10,7 +10,9 @@ import (
 
 // ServerConfig encapsulates the requirements for configuring and starting up the Server process.
 type ServerConfig struct {
-	OIDCIssuer auth.OIDCIssuer `json:"oidc_issuer,omitempty"`
+	OIDC struct {
+		Issuer auth.OIDCIssuer `json:"issuer,omitempty"`
+	} `json:"oidc,omitempty"`
 }
 
 // Server returns a cli.Command that can be added to an existing application.

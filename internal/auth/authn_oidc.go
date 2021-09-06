@@ -11,10 +11,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// OIDCAuthenticationFunc returns a HandleFunc who authenticates a user with the provided issuer using an access_token
+// AuthenticatorOIDC returns a HandleFunc who authenticates a user with the provided issuer using an access_token
 // attached to the request. If provided, this access_token is exchanged for the authenticated users information. It's
 // important to know that this function does not handle authorization and requires an additional HandleFunc to do so.
-func OIDCAuthenticationFunc(issuerURL string) HandleFunc {
+func AuthenticatorOIDC(cfg *OIDCIssuer) HandleFunc {
 	mu := &sync.Mutex{}
 	var provider *oidc.Provider
 
@@ -24,7 +24,7 @@ func OIDCAuthenticationFunc(issuerURL string) HandleFunc {
 
 		if provider == nil {
 			var err error
-			provider, err = oidc.NewProvider(ctx, issuerURL)
+			provider, err = oidc.NewProvider(ctx, cfg.ServerURL)
 			if err != nil {
 				return nil, err
 			}
