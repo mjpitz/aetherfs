@@ -55,6 +55,8 @@ func main() {
 		Version:   fmt.Sprintf("%s (%s)", version, commit),
 		Commands: []*cli.Command{
 			commands.Agent(),
+			commands.Login(),
+			commands.Logout(),
 			commands.Pull(),
 			commands.Push(),
 			commands.Server(),

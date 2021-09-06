@@ -5,10 +5,17 @@ import (
 	"log"
 
 	"github.com/urfave/cli/v2"
+
+	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
+// PushConfig encapsulates all the configuration required to push datasets to AetherFS.
+type PushConfig struct {}
+
+// Push returns a cli.Command that can be added to an existing application.
 func Push() *cli.Command {
-	tags := cli.NewStringSlice()
+	cfg := &PushConfig{}
+	tags := cli.NewStringSlice() // can't put this in config struct quite yet
 
 	return &cli.Command{
 		Name:  "push",
@@ -17,16 +24,18 @@ func Push() *cli.Command {
 			"aetherfs push [options] <path>",
 			"aetherfs push -t maxmind:v1 -t private.company.io/maxmind:v2 /tmp/maxmind",
 		),
-		Flags: []cli.Flag{
-			&cli.StringSliceFlag{
-				Name:        "tag",
-				Aliases:     []string{"t"},
-				Usage:       "name and optional tag to use for the dataset",
-				Destination: tags,
-				Value:       tags,
-				EnvVars:     []string{},
-			},
-		},
+		Flags: append(
+			flagset.Extract(cfg),
+			[]cli.Flag{
+				&cli.StringSliceFlag{
+					Name:        "tag",
+					Aliases:     []string{"t"},
+					Usage:       "name and tag of the dataset we're pushing",
+					Value:       tags,
+					Destination: tags,
+				},
+			}...,
+		),
 		Action: func(ctx *cli.Context) error {
 			path := ctx.Args().Get(0)
 

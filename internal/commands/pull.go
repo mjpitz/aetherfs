@@ -6,9 +6,16 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v2"
+
+	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
+// PullConfig encapsulates all the configuration required to pull datasets from AetherFS.
+type PullConfig struct {}
+
+// Pull returns a cli.Command that can be added to an existing application.
 func Pull() *cli.Command {
+	cfg := &PullConfig{}
 
 	return &cli.Command{
 		Name:  "pull",
@@ -18,6 +25,7 @@ func Pull() *cli.Command {
 			"aetherfs pull /var/datasets maxmind:v1 private.company.io/maxmind:v2",
 			"aetherfs pull -c path/to/application.afs.yaml /var/datasets",
 		),
+		Flags: flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args().Slice()
 
@@ -33,7 +41,7 @@ func Pull() *cli.Command {
 			}
 
 			for _, dataset := range datasets {
-				log.Printf("pulling dataset %s", dataset)
+				log.Printf("pulling dataset %s into path %s", dataset, path)
 			}
 
 			return nil
