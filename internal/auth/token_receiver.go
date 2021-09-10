@@ -19,7 +19,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TokenReceiver(cfg *OIDCConfig) gin.HandlerFunc {
+// TokenCallback is invoked by the TokenReceiver endpoint when we've successfully received and validated the
+// authenticated user session.
+type TokenCallback func(token *oauth2.Token)
+
+// TokenReceiver is some rough code that should allow a command line tool to receive a token and invoke the provided
+// callback function when a successful exchange is performed.
+func TokenReceiver(cfg OIDCConfig, callback TokenCallback) gin.HandlerFunc {
 	mu := &sync.Mutex{}
 
 	var provider *oidc.Provider
@@ -88,6 +94,7 @@ func TokenReceiver(cfg *OIDCConfig) gin.HandlerFunc {
 			return
 		}
 
-		// write oauth2Token somewhere safe
+		ctx.String(http.StatusOK, "You have successfully logged in. You may now close this tab in your browser.")
+		go callback(oauth2Token)
 	}
 }

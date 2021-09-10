@@ -18,6 +18,20 @@ type OIDCConfig struct {
 	RedirectURL  string     `json:"redirect_url,omitempty"  usage:"the redirect_url used by this service to obtain a token"`
 }
 
+type OIDCClientConfig struct {
+	Issuer OIDCIssuer `json:"issuer,omitempty"`
+}
+
+// Config is predominantly used by the `login` command, but is located here to keep the structure between it and
+// ClientConfig similar.
 type Config struct {
-	OIDC OIDCConfig `json:"oidc,omitempty"`
+	AuthType string     `json:"auth_type"      usage:"configure the user authentication type to use"`
+	OIDC     OIDCConfig `json:"oidc,omitempty"`
+}
+
+// ClientConfig is used by most processes and handles verifying user authentication. For the most part, we expect our
+// system to leverage `dex` to handle federated identity management.
+type ClientConfig struct {
+	AuthType string           `json:"auth_type"      usage:"configure the user authentication type to use"`
+	OIDC     OIDCClientConfig `json:"oidc,omitempty"`
 }

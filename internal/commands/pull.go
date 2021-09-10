@@ -8,16 +8,20 @@ package commands
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
+	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
 // PullConfig encapsulates all the configuration required to pull datasets from AetherFS.
-type PullConfig struct {}
+type PullConfig struct {
+	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
+}
 
 // Pull returns a cli.Command that can be added to an existing application.
 func Pull() *cli.Command {
@@ -33,6 +37,8 @@ func Pull() *cli.Command {
 		),
 		Flags: flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
+			logger := ctxzap.Extract(ctx.Context)
+
 			args := ctx.Args().Slice()
 
 			if len(args) == 0 {
@@ -47,7 +53,7 @@ func Pull() *cli.Command {
 			}
 
 			for _, dataset := range datasets {
-				log.Printf("pulling dataset %s into path %s", dataset, path)
+				logger.Info("pulling dataset", zap.String("name", dataset), zap.String("path", path))
 			}
 
 			return nil

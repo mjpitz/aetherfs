@@ -8,15 +8,19 @@ package commands
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
+	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
 // PushConfig encapsulates all the configuration required to push datasets to AetherFS.
-type PushConfig struct {}
+type PushConfig struct {
+	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
+}
 
 // Push returns a cli.Command that can be added to an existing application.
 func Push() *cli.Command {
@@ -39,22 +43,21 @@ func Push() *cli.Command {
 					Usage:       "name and tag of the dataset we're pushing",
 					Value:       tags,
 					Destination: tags,
+					Required:    true,
 				},
 			}...,
 		),
 		Action: func(ctx *cli.Context) error {
+			logger := ctxzap.Extract(ctx.Context)
+
 			path := ctx.Args().Get(0)
 
 			if path == "" {
 				return fmt.Errorf("missing argument: path")
 			}
 
-			if len(tags.Value()) == 0 {
-				return fmt.Errorf("missing option: tag - at least one must be provided")
-			}
-
 			for _, tag := range tags.Value() {
-				log.Printf("pushing dataset %s", tag)
+				logger.Info("pushing dataset", zap.String("name", tag), zap.String("path", path))
 			}
 
 			return nil

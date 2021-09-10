@@ -7,6 +7,10 @@
 package logger
 
 import (
+	"context"
+
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -18,9 +22,19 @@ type Config struct {
 }
 
 // Setup creates a logger given the provided configuration.
-func Setup(cfg Config) (*zap.Logger, error) {
+func Setup(ctx context.Context, cfg Config) context.Context {
 	zapConfig := zap.NewProductionConfig()
 	zapConfig.Level.SetLevel(*(cfg.Level))
 	zapConfig.Encoding = cfg.Format
-	return zapConfig.Build()
+	zapConfig.Sampling = nil // don't sample
+
+	logger, err := zapConfig.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	grpc_zap.ReplaceGrpcLogger(logger)
+	grpc_zap.ReplaceGrpcLoggerV2(logger)
+
+	return ctxzap.ToContext(ctx, logger)
 }

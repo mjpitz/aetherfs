@@ -6,58 +6,49 @@
 package main
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
 	"github.com/mjpitz/aetherfs/internal/flagset"
+	"github.com/mjpitz/aetherfs/internal/lifecycle"
 	"github.com/mjpitz/aetherfs/internal/logger"
 )
 
 type GlobalConfig struct {
-	Log    logger.Config `json:"log,omitempty"`
-	State  string        `json:"state,omitempty"  usage:"location where AetherFS can write small amounts of data"`
-	Config string        `json:"config,omitempty" usage:"location of the client configuration file"`
+	Log      logger.Config `json:"log,omitempty"`
+	StateDir string        `json:"state_dir,omitempty" usage:"location where AetherFS can write small amounts of data"`
+	Config   string        `json:"config,omitempty"    usage:"location of the command configuration file"`
 }
 
 //go:embed AUTHORS
 var authorsFileContents string
 
-var version string
-var commit string
-var date string
+var version = "none"
+var commit = "none"
+var date = time.Now().Format(time.RFC3339)
 
 func main() {
-	compiled, err := time.Parse(time.RFC3339, date)
-	if err != nil {
-		compiled = time.Now()
-	}
+	compiled, _ := time.Parse(time.RFC3339, date)
 
-	if version == "" {
-		version = "none"
-	}
-
-	if commit == "" {
-		commit = "none"
+	format := "json"
+	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+		format = "console" // looks like terminal session, use console logging
 	}
 
 	logLevel := zapcore.InfoLevel
 	cfg := &GlobalConfig{
 		Log: logger.Config{
 			Level:  &logLevel,
-			Format: "json",
+			Format: format,
 		},
-		State: "/usr/local/aetherfs",
+		StateDir: "/usr/local/aetherfs",
 	}
 
 	app := &cli.App{
@@ -66,45 +57,22 @@ func main() {
 		UsageText: "aetherfs <command>",
 		Version:   fmt.Sprintf("%s (%s)", version, commit),
 		Commands: []*cli.Command{
-			commands.Agent(),
 			commands.Login(),
 			commands.Logout(),
 			commands.Pull(),
 			commands.Push(),
-			commands.Server(),
+			commands.Run(),
 		},
 		Flags: flagset.Extract(cfg),
 		Before: func(ctx *cli.Context) error {
-			log, err := logger.Setup(cfg.Log)
-			if err != nil {
-				return err
-			}
-
-			log.Debug("before")
-
-			var cancel context.CancelFunc
-			ctx.Context, cancel = context.WithCancel(ctx.Context)
-			ctx.Context = ctxzap.ToContext(ctx.Context, log)
-
-			halt := make(chan os.Signal, 1)
-			signal.Notify(halt, syscall.SIGINT, syscall.SIGTERM)
-
-			go func() {
-				<-halt
-				signal.Stop(halt)
-
-				log.Info("shutting down")
-				cancel()
-			}()
+			ctx.Context = logger.Setup(ctx.Context, cfg.Log)
+			ctx.Context = lifecycle.Setup(ctx.Context)
 
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
-			// teardown plugins
-			//   - destroy outgoing connections
-			//   - ensure db files are closed
-			//   - etc
-			ctxzap.Extract(ctx.Context).Debug("after")
+			lifecycle.Resolve(ctx.Context)
+
 			return nil
 		},
 		Compiled:  compiled,
@@ -112,8 +80,7 @@ func main() {
 		Copyright: fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved\n", compiled.Year()),
 	}
 
-	err = app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		fmt.Println(err)
 	}
 }

@@ -7,6 +7,7 @@
 package commands
 
 import (
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
 
 	"github.com/mjpitz/aetherfs/internal/flagset"
@@ -26,6 +27,7 @@ func Logout() *cli.Command {
 		Description: "",
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
+			ctxzap.Extract(ctx.Context).Info("logging out")
 			return nil
 		},
 	}
