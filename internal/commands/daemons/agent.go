@@ -20,6 +20,7 @@ import (
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
+	fsv1 "github.com/mjpitz/aetherfs/api/aetherfs/fs/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
@@ -64,17 +65,23 @@ func Agent() *cli.Command {
 			}
 
 			agentSvc := &agentService{
-				blockAPI:   blockv1.NewBlockAPIClient(serverConn),
+				blockAPI:   blockv1.NewBlockAPIClient(agentConn),
 				datasetAPI: datasetv1.NewDatasetAPIClient(serverConn),
 			}
+			blockSvc := &blockService{}
+			fileServerSvc := &fileServerService{}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
 			agentv1.RegisterAgentAPIServer(grpcServer, agentSvc)
+			blockv1.RegisterBlockAPIServer(grpcServer, blockSvc)
+			fsv1.RegisterFileServerAPIServer(grpcServer, fileServerSvc)
 
 			// setup api routes
 			apiServer := runtime.NewServeMux()
 			_ = agentv1.RegisterAgentAPIHandler(ctx.Context, apiServer, agentConn)
+			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, agentConn)
+			_ = fsv1.RegisterFileServerAPIHandler(ctx.Context, apiServer, agentConn)
 
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)

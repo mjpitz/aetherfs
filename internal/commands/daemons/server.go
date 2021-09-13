@@ -19,6 +19,7 @@ import (
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
+	fsv1 "github.com/mjpitz/aetherfs/api/aetherfs/fs/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
@@ -54,16 +55,19 @@ func Server() *cli.Command {
 
 			blockSvc := &blockService{}
 			datasetSvc := &datasetService{}
+			fileServerSvc := &fileServerService{}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
 			blockv1.RegisterBlockAPIServer(grpcServer, blockSvc)
 			datasetv1.RegisterDatasetAPIServer(grpcServer, datasetSvc)
+			fsv1.RegisterFileServerAPIServer(grpcServer, fileServerSvc)
 
 			// setup api routes
 			apiServer := runtime.NewServeMux()
 			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, serverConn)
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
+			_ = fsv1.RegisterFileServerAPIHandler(ctx.Context, apiServer, serverConn)
 
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
