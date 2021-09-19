@@ -1,7 +1,7 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
 //
 // Proprietary and confidential.
-// Unauthorized copying of this file, via any medium is strictly prohibited.
+// Unauthorized copying of this datasetFile, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
 package daemons
@@ -16,11 +16,11 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/metadata"
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
-	fsv1 "github.com/mjpitz/aetherfs/api/aetherfs/fs/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
@@ -48,7 +48,7 @@ func Agent() *cli.Command {
 		Name:        "agent",
 		Usage:       "Runs the AetherFS Agent process",
 		UsageText:   "aetherfs run agent [options]",
-		Description: "The aetherfs-agent process is responsible for managing the local file system.",
+		Description: "The aetherfs-agent process is responsible for managing the local datasetFile system.",
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			agentConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
@@ -64,24 +64,24 @@ func Agent() *cli.Command {
 				return err
 			}
 
+			blockAPI := blockv1.NewBlockAPIClient(agentConn)
+			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
+
 			agentSvc := &agentService{
-				blockAPI:   blockv1.NewBlockAPIClient(agentConn),
-				datasetAPI: datasetv1.NewDatasetAPIClient(serverConn),
+				blockAPI:   blockAPI,
+				datasetAPI: datasetAPI,
 			}
 			blockSvc := &blockService{}
-			fileServerSvc := &fileServerService{}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
 			agentv1.RegisterAgentAPIServer(grpcServer, agentSvc)
 			blockv1.RegisterBlockAPIServer(grpcServer, blockSvc)
-			fsv1.RegisterFileServerAPIServer(grpcServer, fileServerSvc)
 
 			// setup api routes
 			apiServer := runtime.NewServeMux()
 			_ = agentv1.RegisterAgentAPIHandler(ctx.Context, apiServer, agentConn)
 			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, agentConn)
-			_ = fsv1.RegisterFileServerAPIHandler(ctx.Context, apiServer, agentConn)
 
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
@@ -89,8 +89,35 @@ func Agent() *cli.Command {
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
 			ginServer.Use(func(ginctx *gin.Context) {
-				if strings.HasPrefix(ginctx.Request.URL.Path, "/v1/") {
-					apiServer.ServeHTTP(ginctx.Writer, ginctx.Request)
+				// preprocess headers into grpc metadata
+				md := metadata.New(nil)
+				for k, vv := range ginctx.Request.Header {
+					md.Set(k, vv...)
+				}
+
+				ctx := metadata.NewIncomingContext(ginctx.Request.Context(), md)
+				ginctx.Request = ginctx.Request.WithContext(ctx)
+
+				writer := ginctx.Writer
+				request := ginctx.Request
+
+				switch {
+				case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
+					// handle FileServer requests (need to trim prefix)
+					request.URL.Path = strings.TrimPrefix(request.URL.Path, "/v1/fs/")
+
+					fs := &fileSystem{
+						ctx:        ctx,
+						blockAPI:   blockAPI,
+						datasetAPI: datasetAPI,
+					}
+
+					http.FileServer(fs).ServeHTTP(writer, request)
+
+				case strings.HasPrefix(request.URL.Path, "/v1/"):
+					// handle grpc-gateway requests
+					apiServer.ServeHTTP(writer, request)
+
 				}
 			})
 
@@ -98,6 +125,7 @@ func Agent() *cli.Command {
 				ctx.Context,
 				cfg.HTTPServerConfig,
 				http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+					// split grpc here to avoid duplicate prometheus metrics
 					if request.ProtoMajor == 2 &&
 						strings.HasPrefix(request.Header.Get("Content-Type"), "application/grpc") {
 						grpcServer.ServeHTTP(writer, request)

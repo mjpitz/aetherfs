@@ -15,11 +15,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/metadata"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
-	fsv1 "github.com/mjpitz/aetherfs/api/aetherfs/fs/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
@@ -53,21 +53,21 @@ func Server() *cli.Command {
 				return err
 			}
 
+			blockAPI := blockv1.NewBlockAPIClient(serverConn)
+			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
+
 			blockSvc := &blockService{}
 			datasetSvc := &datasetService{}
-			fileServerSvc := &fileServerService{}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
 			blockv1.RegisterBlockAPIServer(grpcServer, blockSvc)
 			datasetv1.RegisterDatasetAPIServer(grpcServer, datasetSvc)
-			fsv1.RegisterFileServerAPIServer(grpcServer, fileServerSvc)
 
 			// setup api routes
 			apiServer := runtime.NewServeMux()
 			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, serverConn)
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
-			_ = fsv1.RegisterFileServerAPIHandler(ctx.Context, apiServer, serverConn)
 
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
@@ -75,8 +75,35 @@ func Server() *cli.Command {
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
 			ginServer.Use(func(ginctx *gin.Context) {
-				if strings.HasPrefix(ginctx.Request.URL.Path, "/v1/") {
-					apiServer.ServeHTTP(ginctx.Writer, ginctx.Request)
+				// preprocess headers into grpc metadata
+				md := metadata.New(nil)
+				for k, vv := range ginctx.Request.Header {
+					md.Set(k, vv...)
+				}
+
+				ctx := metadata.NewIncomingContext(ginctx.Request.Context(), md)
+				ginctx.Request = ginctx.Request.WithContext(ctx)
+
+				writer := ginctx.Writer
+				request := ginctx.Request
+
+				switch {
+				case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
+					// handle FileServer requests (need to trim prefix)
+					request.URL.Path = strings.TrimPrefix(request.URL.Path, "/v1/fs/")
+
+					fs := &fileSystem{
+						ctx:        ctx,
+						blockAPI:   blockAPI,
+						datasetAPI: datasetAPI,
+					}
+
+					http.FileServer(fs).ServeHTTP(writer, request)
+
+				case strings.HasPrefix(request.URL.Path, "/v1/"):
+					// handle grpc-gateway requests
+					apiServer.ServeHTTP(writer, request)
+
 				}
 			})
 
@@ -84,6 +111,7 @@ func Server() *cli.Command {
 				ctx.Context,
 				cfg.HTTPServerConfig,
 				http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+					// split grpc here to avoid duplicate prometheus metrics
 					if request.ProtoMajor == 2 &&
 						strings.HasPrefix(request.Header.Get("Content-Type"), "application/grpc") {
 						grpcServer.ServeHTTP(writer, request)

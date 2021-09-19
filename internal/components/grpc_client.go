@@ -22,6 +22,13 @@ import (
 	"github.com/mjpitz/aetherfs/internal/lifecycle"
 )
 
+const defaultServiceConfig = `{
+  "loadBalancingPolicy": "round_robin",
+  "healthCheckConfig": {
+    "serviceName": ""
+  }
+}`
+
 type GRPCClientConfig struct {
 	Target    string    `json:"target,omitempty" usage:"address the grpc client should dial"`
 	TLSConfig TLSConfig `json:"tls,omitempty"`
@@ -44,6 +51,7 @@ func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, er
 	}
 
 	opts := []grpc.DialOption{
+		grpc.WithDefaultServiceConfig(defaultServiceConfig),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(unaryInterceptors...)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(streamInterceptors...)),
 	}
