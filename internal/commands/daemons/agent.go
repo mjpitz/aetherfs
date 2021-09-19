@@ -1,7 +1,7 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
 //
 // Proprietary and confidential.
-// Unauthorized copying of this datasetFile, via any medium is strictly prohibited.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
 package daemons
@@ -48,7 +48,7 @@ func Agent() *cli.Command {
 		Name:        "agent",
 		Usage:       "Runs the AetherFS Agent process",
 		UsageText:   "aetherfs run agent [options]",
-		Description: "The aetherfs-agent process is responsible for managing the local datasetFile system.",
+		Description: "The aetherfs-agent process is responsible for managing the local file system.",
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			agentConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
