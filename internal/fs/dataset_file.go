@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"strings"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
@@ -41,6 +42,10 @@ func min(a, b uint64) uint64 {
 }
 
 func (f *datasetFile) Read(p []byte) (n int, err error) {
+	if f.file == nil {
+		return 0, os.ErrInvalid
+	}
+
 	if uint64(f.fileOffset) >= f.file.Size {
 		return 0, io.EOF
 	}
@@ -112,6 +117,10 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 }
 
 func (f *datasetFile) Seek(offset int64, whence int) (int64, error) {
+	if f.file == nil {
+		return 0, os.ErrInvalid
+	}
+
 	var next int64
 	switch whence {
 	case io.SeekStart:

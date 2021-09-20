@@ -53,8 +53,6 @@ func (f *FileSystem) renderDatasetList(scope string) (http.File, error) {
 		datasets = filteredDatasets
 	}
 
-	ctxzap.Extract(f.Context).Info("dataset list", zap.String("filePath", filePath), zap.Strings("datasets", datasets))
-
 	return &datasetListNode{
 		filePath:    filePath,
 		datasetList: datasets,
@@ -111,20 +109,13 @@ func (f *FileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 		isDirectory = isDirectory || strings.HasPrefix(file.Name, filePath)
 	}
 
-	switch {
-	case requestedFile != nil:
+	if requestedFile != nil || isDirectory {
 		return &datasetFile{
 			ctx:      f.Context,
 			blockAPI: f.BlockAPI,
 			dataset:  resp.GetDataset(),
 			filePath: filePath,
-			file:     requestedFile,
-		}, nil
-	case isDirectory:
-		return &datasetFile{
-			ctx:      f.Context,
-			dataset:  resp.GetDataset(),
-			filePath: filePath,
+			file:     requestedFile,		// maybe nil
 		}, nil
 	}
 
