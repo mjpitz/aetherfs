@@ -4,7 +4,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
-package daemons
+package fs
 
 import (
 	"context"
@@ -14,42 +14,23 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 )
 
-type fileSystem struct {
-	ctx context.Context
+type FileSystem struct {
+	Context context.Context
 
-	blockAPI   blockv1.BlockAPIClient
-	datasetAPI datasetv1.DatasetAPIClient
-}
-
-// translateError takes in an arbitrary error and attempts to convert it to a more meaningful error code.
-func (f *fileSystem) translateError(err error) (http.File, error) {
-	st, ok := status.FromError(err)
-	if ok {
-		switch st.Code() {
-		case codes.Unauthenticated:
-			return nil, os.ErrPermission
-		case codes.NotFound:
-			return nil, os.ErrNotExist
-		case codes.DeadlineExceeded:
-			return nil, os.ErrDeadlineExceeded
-		}
-	}
-
-	return nil, err
+	BlockAPI   blockv1.BlockAPIClient
+	DatasetAPI datasetv1.DatasetAPIClient
 }
 
 // renderDatasetList renders top level nodes that list datasets within the file system.
-func (f *fileSystem) renderDatasetList(scope string) (http.File, error) {
-	listResp, err := f.datasetAPI.List(f.ctx, &datasetv1.ListRequest{})
+func (f *FileSystem) renderDatasetList(scope string) (http.File, error) {
+	listResp, err := f.DatasetAPI.List(f.Context, &datasetv1.ListRequest{})
 	if err != nil {
-		return f.translateError(err)
+		return nil, translateError(err)
 	}
 
 	datasets := listResp.GetDatasets()
@@ -72,7 +53,7 @@ func (f *fileSystem) renderDatasetList(scope string) (http.File, error) {
 		datasets = filteredDatasets
 	}
 
-	ctxzap.Extract(f.ctx).Info("dataset list", zap.String("filePath", filePath), zap.Strings("datasets", datasets))
+	ctxzap.Extract(f.Context).Info("dataset list", zap.String("filePath", filePath), zap.Strings("datasets", datasets))
 
 	return &datasetListNode{
 		filePath:    filePath,
@@ -81,17 +62,17 @@ func (f *fileSystem) renderDatasetList(scope string) (http.File, error) {
 }
 
 // renderTagList renders the list of tags for the provided dataset.
-func (f *fileSystem) renderTagList(scope, dataset string) (http.File, error) {
+func (f *FileSystem) renderTagList(scope, dataset string) (http.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
 
-	listTagsResp, err := f.datasetAPI.ListTags(f.ctx, &datasetv1.ListTagsRequest{
+	listTagsResp, err := f.DatasetAPI.ListTags(f.Context, &datasetv1.ListTagsRequest{
 		Name: dataset,
 	})
 
 	if err != nil {
-		return f.translateError(err)
+		return nil, translateError(err)
 	}
 
 	return &tagListNode{
@@ -101,14 +82,14 @@ func (f *fileSystem) renderTagList(scope, dataset string) (http.File, error) {
 }
 
 // renderDatasetFile renders a files within a given tagged dataset.
-func (f *fileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (http.File, error) {
+func (f *FileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (http.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
 
 	// load dataset
 	// filePath may be a directory (prefix) or datasetFile within the given dataset
-	resp, err := f.datasetAPI.Lookup(f.ctx, &datasetv1.LookupRequest{
+	resp, err := f.DatasetAPI.Lookup(f.Context, &datasetv1.LookupRequest{
 		Tag: &datasetv1.Tag{
 			Name:    dataset,
 			Version: tag,
@@ -116,7 +97,7 @@ func (f *fileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 	})
 
 	if err != nil {
-		return f.translateError(err)
+		return nil, translateError(err)
 	}
 
 	var requestedFile *datasetv1.File
@@ -130,12 +111,20 @@ func (f *fileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 		isDirectory = isDirectory || strings.HasPrefix(file.Name, filePath)
 	}
 
-	if requestedFile != nil || isDirectory {
+	switch {
+	case requestedFile != nil:
 		return &datasetFile{
-			ctx:      f.ctx,
+			ctx:      f.Context,
+			blockAPI: f.BlockAPI,
 			dataset:  resp.GetDataset(),
 			filePath: filePath,
 			file:     requestedFile,
+		}, nil
+	case isDirectory:
+		return &datasetFile{
+			ctx:      f.Context,
+			dataset:  resp.GetDataset(),
+			filePath: filePath,
 		}, nil
 	}
 
@@ -146,14 +135,14 @@ func (f *fileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 // 1.631977188164028e+09   info    daemons/filesystem.go:18        open    {"name": "/test"}
 // 1.631977204080589e+09   info    daemons/filesystem.go:18        open    {"name": "/test/path"}
 // 1.6319772103438861e+09  info    daemons/filesystem.go:18        open    {"name": "/test/path.jpg"}
-func (f *fileSystem) Open(name string) (http.File, error) {
+func (f *FileSystem) Open(name string) (http.File, error) {
 	var parts []string
 
 	// in some cases, go will append index.html to a file
 	// this is a gross hack to prevent that from happening
 	name = strings.TrimSuffix(name, "/index.html")
 
-	ctxzap.Extract(f.ctx).Info("open", zap.String("path", name))
+	ctxzap.Extract(f.Context).Info("open", zap.String("path", name))
 
 	if strings.HasPrefix(strings.TrimPrefix(name, "/"), "@") {
 		parts = strings.SplitN(name, "/", 5)
@@ -184,7 +173,7 @@ func (f *fileSystem) Open(name string) (http.File, error) {
 		provided = provided || parts[i] != ""
 	}
 
-	ctxzap.Extract(f.ctx).Info("route", zap.Strings("parts", parts))
+	ctxzap.Extract(f.Context).Info("route", zap.Strings("parts", parts))
 
 	scope := parts[0]
 	dataset := parts[1]
@@ -200,4 +189,4 @@ func (f *fileSystem) Open(name string) (http.File, error) {
 	return f.renderDatasetFile(scope, dataset, tag, filePath)
 }
 
-var _ http.FileSystem = &fileSystem{}
+var _ http.FileSystem = &FileSystem{}

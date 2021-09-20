@@ -13,9 +13,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/rs/cors"
-	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -55,10 +53,7 @@ func ListenAndServeHTTP(ctx context.Context, cfg HTTPServerConfig, handler http.
 	})
 
 	go func() {
-		err = svr.ListenAndServe()
-		if err != nil {
-			ctxzap.Extract(ctx).Error("failed to start http server", zap.Error(err))
-		}
+		_ = svr.ListenAndServe()
 	}()
 
 	return nil

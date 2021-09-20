@@ -22,6 +22,7 @@ import (
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
+	"github.com/mjpitz/aetherfs/internal/fs"
 )
 
 // ServerConfig encapsulates the requirements for configuring and starting up the Server process.
@@ -92,13 +93,13 @@ func Server() *cli.Command {
 					// handle FileServer requests (need to trim prefix)
 					request.URL.Path = strings.TrimPrefix(request.URL.Path, "/v1/fs/")
 
-					fs := &fileSystem{
-						ctx:        ctx,
-						blockAPI:   blockAPI,
-						datasetAPI: datasetAPI,
+					fileSystem := &fs.FileSystem{
+						Context:    ctx,
+						BlockAPI:   blockAPI,
+						DatasetAPI: datasetAPI,
 					}
 
-					http.FileServer(fs).ServeHTTP(writer, request)
+					http.FileServer(fileSystem).ServeHTTP(writer, request)
 
 				case strings.HasPrefix(request.URL.Path, "/v1/"):
 					// handle grpc-gateway requests
