@@ -21,18 +21,18 @@ import (
 	"github.com/mjpitz/aetherfs/internal/logger"
 )
 
-type GlobalConfig struct {
-	Log      logger.Config `json:"log,omitempty"`
-	StateDir string        `json:"state_dir,omitempty" usage:"location where AetherFS can write small amounts of data"`
-	Config   string        `json:"config,omitempty"    usage:"location of the command configuration file"`
-}
-
 //go:embed AUTHORS
 var authorsFileContents string
 
 var version = "none"
 var commit = "none"
 var date = time.Now().Format(time.RFC3339)
+
+type GlobalConfig struct {
+	Log      logger.Config `json:"log,omitempty"`
+	StateDir string        `json:"state_dir,omitempty" usage:"location where AetherFS can write small amounts of data"`
+	Config   string        `json:"config,omitempty"    usage:"location of the command configuration file"`
+}
 
 func main() {
 	compiled, _ := time.Parse(time.RFC3339, date)
@@ -54,11 +54,10 @@ func main() {
 	app := &cli.App{
 		Name:      "aetherfs",
 		Usage:     "A publish once, consume many file system for small to medium datasets",
-		UsageText: "aetherfs <command>",
+		UsageText: "aetherfs [options] <command>",
 		Version:   fmt.Sprintf("%s (%s)", version, commit),
 		Commands: []*cli.Command{
-			commands.Login(),
-			commands.Logout(),
+			commands.Auth(),
 			commands.Pull(),
 			commands.Push(),
 			commands.Run(),
@@ -75,9 +74,12 @@ func main() {
 
 			return nil
 		},
-		Compiled:  compiled,
-		Authors:   authors.Parse(authorsFileContents),
-		Copyright: fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved\n", compiled.Year()),
+		Compiled:             compiled,
+		Authors:              authors.Parse(authorsFileContents),
+		Copyright:            fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved\n", compiled.Year()),
+		HideHelpCommand:      true,
+		EnableBashCompletion: true,
+		BashComplete:         cli.DefaultAppComplete,
 	}
 
 	if err := app.Run(os.Args); err != nil {
