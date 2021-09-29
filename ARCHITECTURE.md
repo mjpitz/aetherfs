@@ -96,12 +96,12 @@ datasets.
 
 ### Requirements
 
-  - [ ] Efficiently use [AWS S3][] (or equivalent) to store dataset information.
-  - [ ] Information should be encrypted in transit and at rest.
-  - [ ] Authenticate clients (users and services) using common schemes (OIDC, Basic).
-  - [ ] Enforce access controls around datasets.
-  - [ ] Provide numerous interfaces to manage and access information in the system.
-  - [ ] Build in developer tools to help artifact producers understand the performance of their datasets
+  - Efficiently use [AWS S3][] (or equivalent) to store dataset information.
+  - Information should be encrypted in transit and at rest.
+  - Authenticate clients (users and services) using common schemes (OIDC, Basic).
+  - Enforce access controls around datasets.
+  - Provide numerous interfaces to manage and access information in the system.
+  - Build in developer tools to help artifact producers understand the performance of their datasets.
 
 ### Components
 
