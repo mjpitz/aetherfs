@@ -14,6 +14,7 @@
     * [Agent API](#agent-api)
     * [Block API](#block-api)
     * [Dataset API](#dataset-api)
+    * [Web](#web)
   * [Configuration](#configuration)
     * [Clustering](#clustering)
     * [Persistence](#persistence)
@@ -23,6 +24,8 @@
     * [Authorization](#authorization)
     * [Encryption at Rest](#encryption-at-rest)
     * [Encryption in Transit](#encryption-in-transit)
+* [Milestones](#milestones)
+  * [Deliverables](#deliverables)
 
 ## Background
 
@@ -43,8 +46,8 @@ everything in S3. While I have not used Hollow myself, I can see the utility it 
 ### Motivation
 
 Since leaving Indeed, I've often thought about what a modern take on this technology might look like. In addition to
-this curiosity, I've found myself wanting a similar solution that can be used on edge or IoT devices where storage is 
-limited or non-existent.
+this curiosity, I've found myself wanting a similar solution that can be used on edge or IoT devices where storage may
+be limited or non-existent.
 
 ### Concepts
 
@@ -105,9 +108,21 @@ datasets.
 
 ### Components
 
-#### AetherFS Agent
+AetherFS is distributed as a single binary. Each component provides both a REST and gRPC interface. Since we leverage
+streaming APIs, not all gRPC calls are available on the REST interface. Additionally, the REST interface provides an
+[HTTP file server](#http-file-server) where files can be read directly.
 
 #### AetherFS Server
+
+The AetherFS server is the primary component in AetherFS. It provides the core interfaces that are leverage by all other
+components in AetherFS. The server is responsible for managing the underlying storage tier and verifying the
+authenticated clients have access to the desired dataset.
+
+#### AetherFS Agent
+
+The AetherFS agent is an optional sidecar process. It provides an application level cache for block data and can also
+manage a local file system path (if enabled). It provides a special [Agent API](#agent-api) that can publish datasets 
+programmatically.
 
 ## Implementation
 
@@ -119,11 +134,17 @@ datasets.
 
 #### HTTP File Server
 
+[Golang's http.FileServer](https://pkg.go.dev/net/http#FileServer) implementation.
+
+[HTTP range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests)
+
 #### Agent API
 
 #### Block API
 
 #### Dataset API
+
+#### Web
 
 ### Configuration
 
@@ -155,3 +176,38 @@ search, it seemed like most solutions provide some form of encryption at rest.
 #### Encryption in Transit
 
 Where possible, our systems leverage TLS certificates to encrypt communication between processes.
+
+## Milestones
+
+AetherFS tags releases with [calendar versions](https://calver.org). The format for each release is as follows:
+
+![](https://img.shields.io/badge/calver-YY.0M.MICRO-22bfda.svg)
+
+### Deliverables
+
+#### v21.11
+
+- Components
+  - AetherFS Server
+- Interfaces
+  - HTTP File Server
+  - Block API
+  - Dataset API
+- Security & Privacy
+  - Encryption at Rest
+  - Encryption in Transit
+
+#### v22.05
+
+- Interfaces
+  - Web
+- Security & Privacy
+  - Authentication
+  - Authorization
+
+#### v22.11
+
+- Components
+  - AetherFS Agent
+- Interfaces
+  - Agent API
