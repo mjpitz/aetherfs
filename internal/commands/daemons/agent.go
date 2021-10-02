@@ -34,7 +34,7 @@ type AgentConfig struct {
 	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
 }
 
-// Agent returns a cli.Command that can be added to an existing application.
+// Agent returns a command that will run the agent process.
 func Agent() *cli.Command {
 	cfg := &AgentConfig{
 		HTTPServerConfig: components.HTTPServerConfig{

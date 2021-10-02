@@ -13,16 +13,14 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
-	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
 // PushConfig encapsulates all the configuration required to push datasets to AetherFS.
 type PushConfig struct {
-	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
 }
 
-// Push returns a cli.Command that can be added to an existing application.
+// Push returns a command used to push datasets to upstream servers.
 func Push() *cli.Command {
 	cfg := &PushConfig{}
 	tags := cli.NewStringSlice() // can't put this in config struct quite yet

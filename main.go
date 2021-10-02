@@ -9,6 +9,8 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -61,6 +63,7 @@ func main() {
 			commands.Pull(),
 			commands.Push(),
 			commands.Run(),
+			commands.Version(),
 		},
 		Flags: flagset.Extract(cfg),
 		Before: func(ctx *cli.Context) error {
@@ -77,9 +80,16 @@ func main() {
 		Compiled:             compiled,
 		Authors:              authors.Parse(authorsFileContents),
 		Copyright:            fmt.Sprintf("Copyright %d The AetherFS Authors - All Rights Reserved\n", compiled.Year()),
+		HideVersion:          true,
 		HideHelpCommand:      true,
 		EnableBashCompletion: true,
 		BashComplete:         cli.DefaultAppComplete,
+		Metadata: map[string]interface{}{
+			"OS":           runtime.GOOS,
+			"Architecture": runtime.GOARCH,
+			"Go":           strings.TrimPrefix(runtime.Version(), "go"),
+			"Compiled":     date,
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {

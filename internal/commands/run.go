@@ -10,21 +10,14 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/mjpitz/aetherfs/internal/commands/daemons"
-	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
-// RunConfig encapsulates all the configuration required to start an AetherFS process.
-type RunConfig struct{}
-
-// Start returns a cli.Command that can be added to an existing application.
+// Run returns a command that can execute a given part of the ecosystem.
 func Run() *cli.Command {
-	cfg := &RunConfig{}
-
 	return &cli.Command{
 		Name:      "run",
 		Usage:     "Run the various AetherFS processes",
 		UsageText: "aetherfs run <process>",
-		Flags:     flagset.Extract(cfg),
 		Subcommands: []*cli.Command{
 			daemons.Agent(),
 			daemons.Server(),

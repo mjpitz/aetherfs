@@ -31,7 +31,7 @@ type ServerConfig struct {
 	HTTPServerConfig components.HTTPServerConfig `json:",omitempty"`
 }
 
-// Server returns a cli.Command that can be added to an existing application.
+// Server returns a command that will run the server process.
 func Server() *cli.Command {
 	cfg := &ServerConfig{
 		HTTPServerConfig: components.HTTPServerConfig{

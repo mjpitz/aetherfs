@@ -14,16 +14,14 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
-	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
 // PullConfig encapsulates all the configuration required to pull datasets from AetherFS.
 type PullConfig struct {
-	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
 }
 
-// Pull returns a cli.Command that can be added to an existing application.
+// Pull returns a command that downloads datasets from upstream servers
 func Pull() *cli.Command {
 	cfg := &PullConfig{}
 

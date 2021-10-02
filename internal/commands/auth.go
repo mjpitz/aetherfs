@@ -11,12 +11,14 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/mjpitz/aetherfs/internal/auth"
+	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 )
 
 // AuthConfig encapsulates all the configuration required to log in to an AetherFS instance.
 type AuthConfig struct {
-	auth.Config `json:",omitempty"`
+	auth.Config                 `json:",omitempty"`
+	components.GRPCClientConfig `json:",omitempty"`
 
 	Remove bool `json:"remove,omitempty" usage:"set to prune existing credentials"`
 }
