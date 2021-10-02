@@ -104,7 +104,7 @@ datasets.
   - Authenticate clients (users and services) using common schemes (OIDC, Basic).
   - Enforce access controls around datasets.
   - Provide numerous interfaces to manage and access information in the system.
-  - Build in developer tools to help artifact producers understand the performance of their datasets.
+  - Built in developer tools to help producers understand the performance of their datasets.
 
 ### Components
 
