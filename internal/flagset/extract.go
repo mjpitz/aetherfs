@@ -17,8 +17,9 @@ import (
 )
 
 type ref struct {
-	t reflect.Type
-	v reflect.Value
+	name string
+	t    reflect.Type
+	v    reflect.Value
 }
 
 func (r *ref) Set(value string) error {
@@ -114,15 +115,8 @@ func format(prefix []string, name string) string {
 	return envVar
 }
 
-func extract(prefix []string, v interface{}) []cli.Flag {
+func extract(prefix []string, value reflect.Value) []cli.Flag {
 	flags := make([]cli.Flag, 0)
-
-	value := reflect.ValueOf(v)
-
-	// unbox pointers
-	if value.Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
 
 	for i := 0; i < value.NumField(); i++ {
 		fieldValue := value.Field(i)
@@ -133,15 +127,18 @@ func extract(prefix []string, v interface{}) []cli.Flag {
 			continue
 		}
 
+		if fieldValue.Kind() == reflect.Ptr {
+			fieldValue = fieldValue.Elem()
+		}
+
 		// recursive field types
-		switch fieldValue.Kind() {
-		case reflect.Struct:
+		if fieldValue.Kind() == reflect.Struct {
 			pre := prefix
 			if name != "" {
 				pre = append(pre, name)
 			}
 
-			flags = append(flags, extract(pre, fieldValue.Interface())...)
+			flags = append(flags, extract(pre, fieldValue)...)
 			continue
 		}
 
@@ -159,8 +156,9 @@ func extract(prefix []string, v interface{}) []cli.Flag {
 			Usage:   field.Tag.Get("usage"),
 			EnvVars: []string{strings.ToUpper(flagName)},
 			Value: &ref{
-				t: field.Type,
-				v: fieldValue,
+				name: flagName,
+				t:    field.Type,
+				v:    fieldValue,
 			},
 		})
 	}
@@ -170,5 +168,11 @@ func extract(prefix []string, v interface{}) []cli.Flag {
 
 // Extract parses the provided object to create a flagset.
 func Extract(v interface{}) []cli.Flag {
-	return extract([]string{}, v)
+	value := reflect.ValueOf(v)
+
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+
+	return extract([]string{}, value)
 }

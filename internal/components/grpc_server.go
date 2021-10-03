@@ -23,7 +23,7 @@ import (
 )
 
 type GRPCServerConfig struct {
-	AuthConfig auth.ClientConfig `json:",omitempty"`
+	AuthConfig auth.ClientConfig `json:""`
 }
 
 func GRPCServer(ctx context.Context, cfg GRPCServerConfig) *grpc.Server {

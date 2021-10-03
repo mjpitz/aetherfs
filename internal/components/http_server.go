@@ -21,8 +21,8 @@ import (
 )
 
 type HTTPServerConfig struct {
-	Port      int       `json:"port,omitempty" usage:"which port the HTTP server should be bound to"`
-	TLSConfig TLSConfig `json:"tls,omitempty"`
+	Port      int       `json:"port" usage:"which port the HTTP server should be bound to"`
+	TLSConfig TLSConfig `json:"tls"`
 }
 
 func ListenAndServeHTTP(ctx context.Context, cfg HTTPServerConfig, handler http.Handler) error {

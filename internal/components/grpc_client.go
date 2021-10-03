@@ -30,8 +30,8 @@ const defaultServiceConfig = `{
 }`
 
 type GRPCClientConfig struct {
-	Target    string    `json:"target,omitempty" usage:"address the grpc client should dial"`
-	TLSConfig TLSConfig `json:"tls,omitempty"`
+	Target    string    `json:"target" usage:"address the grpc client should dial"`
+	TLSConfig TLSConfig `json:"tls"`
 }
 
 func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, error) {

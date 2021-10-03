@@ -20,6 +20,6 @@ option java_multiple_files = true;
 // File describes a filesystem file that is replicated using AetherFS.
 message File {
   string name = 1;                             // name of the file (including directories)
-  uint64 size = 2;                             // size in bytes
+  int64 size = 2;                             // size in bytes
   google.protobuf.Timestamp last_modified = 3; // time of last modification
 }

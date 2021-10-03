@@ -21,6 +21,6 @@ option java_multiple_files = true;
 // a dataset are broken into blocks to make caching and sharing parts easier.
 message Dataset {
   repeated File files = 1;    // manifest of files within the dataset
-  uint32 block_size = 2;      // maximum size of the blocks in bytes
+  int32 block_size = 2;      // maximum size of the blocks in bytes
   repeated string blocks = 3; // a list of block signatures
 }

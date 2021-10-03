@@ -34,7 +34,7 @@ func (f *datasetFile) Close() error {
 	return nil
 }
 
-func min(a, b uint64) uint64 {
+func min(a, b int64) int64 {
 	if a < b {
 		return a
 	}
@@ -46,23 +46,23 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 		return 0, os.ErrInvalid
 	}
 
-	if uint64(f.fileOffset) >= f.file.Size {
+	if f.fileOffset >= f.file.Size {
 		return 0, io.EOF
 	}
 
-	blockSize := uint64(f.dataset.BlockSize)
-	fileOffset := uint64(f.fileOffset)
+	blockSize := int64(f.dataset.BlockSize)
+	fileOffset := f.fileOffset
 
 	// factor in fileOffset which can reduce the total number of bytes that can be read
-	numBytesToRead := min(uint64(len(p)), f.file.Size-fileOffset)
+	numBytesToRead := min(int64(len(p)), f.file.Size-fileOffset)
 
-	var numBlocksToRead uint64
+	var numBlocksToRead int64
 	if numBytesToRead%blockSize > 0 {
 		numBlocksToRead = 1
 	}
 	numBlocksToRead += numBytesToRead / blockSize
 
-	var datasetFileOffset uint64
+	var datasetFileOffset int64
 	for _, file := range f.dataset.Files {
 		if file.Name == f.file.Name {
 			break
@@ -77,15 +77,15 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 	startingBlock := readOffset / blockSize
 	blockOffset := readOffset % blockSize
 
-	pi := 0
+	bytesRead := 0
 	for i := startingBlock; i < startingBlock+numBlocksToRead; i++ {
 		stream, err := f.blockAPI.Download(f.ctx, &blockv1.DownloadRequest{
 			Signature: f.dataset.Blocks[i],
 			Offset:    blockOffset,
-			Size:      min(blockSize, numBytesToRead-uint64(pi)),
+			Size:      min(blockSize, numBytesToRead-int64(bytesRead)),
 		})
 		if err != nil {
-			return pi, translateError(err)
+			return bytesRead, translateError(err)
 		}
 
 		var resp *blockv1.DownloadResponse
@@ -98,22 +98,22 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 				break LOOP
 			case err != nil:
 				// translate err
-				return pi, translateError(err)
+				return bytesRead, translateError(err)
 			}
 
-			copy(p[pi:], resp.Part)
-			pi += len(resp.Part)
+			copy(p[bytesRead:], resp.Part)
+			bytesRead += len(resp.Part)
 		}
 
 		// every subsequent block should be read from the start
 		blockOffset = 0
 	}
 
-	if pi < len(p) {
+	if bytesRead < len(p) {
 		err = io.EOF
 	}
 
-	return pi, err
+	return bytesRead, err
 }
 
 func (f *datasetFile) Seek(offset int64, whence int) (int64, error) {
@@ -128,7 +128,7 @@ func (f *datasetFile) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		next = f.fileOffset + offset
 	case io.SeekEnd:
-		next = int64(f.file.Size) + offset
+		next = f.file.Size + offset
 	default:
 		return 0, errors.New("daemons.datasetFile.Seek: invalid whence")
 	}

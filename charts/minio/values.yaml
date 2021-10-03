@@ -1,0 +1,10 @@
+minio:
+  enabled: true
+
+  accessKey: "minioadmin"
+  secretKey: "minioadmin"
+
+  fullnameOverride: "minio"
+
+  persistence:
+    size: 20Gi

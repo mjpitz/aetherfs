@@ -1,0 +1,11 @@
+apiVersion: v2
+type: application
+name: minio
+description: A Helm chart for deploying MinIO, an S3 alternative.
+version: 0.0.0
+appVersion: 0.0.0
+dependencies:
+  - name: minio
+    repository: https://helm.min.io/
+    version: 8.0.9
+    condition: minio.enabled
