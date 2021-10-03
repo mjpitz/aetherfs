@@ -28,8 +28,8 @@ import (
 
 // AgentConfig encapsulates the requirements for configuring and starting up the Agent process.
 type AgentConfig struct {
-	HTTPServerConfig components.HTTPServerConfig `json:""`
-	GRPCServerConfig components.GRPCServerConfig `json:""`
+	HTTPServerConfig   components.HTTPServerConfig `json:""`
+	GRPCServerConfig   components.GRPCServerConfig `json:""`
 	ServerClientConfig components.GRPCClientConfig `json:"server"`
 }
 
@@ -143,5 +143,6 @@ func Agent() *cli.Command {
 			<-ctx.Done()
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

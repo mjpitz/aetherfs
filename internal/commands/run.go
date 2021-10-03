@@ -22,5 +22,6 @@ func Run() *cli.Command {
 			daemons.Agent(),
 			daemons.Server(),
 		},
+		HideHelpCommand: true,
 	}
 }

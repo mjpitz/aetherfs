@@ -42,5 +42,6 @@ func Auth() *cli.Command {
 			}
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

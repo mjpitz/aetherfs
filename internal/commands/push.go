@@ -60,5 +60,6 @@ func Push() *cli.Command {
 
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

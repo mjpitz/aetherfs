@@ -144,5 +144,6 @@ func Server() *cli.Command {
 			<-ctx.Done()
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }
