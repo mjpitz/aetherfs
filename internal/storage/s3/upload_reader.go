@@ -13,24 +13,35 @@ import (
 )
 
 type uploadReader struct {
-	buffer []byte
 	call   blockv1.BlockAPI_UploadServer
+	buffer []byte
+	done   bool
 }
 
 func (r *uploadReader) Read(p []byte) (n int, err error) {
-	for len(p) > len(r.buffer) {
+	for !r.done && len(p) > len(r.buffer) {
 		req, err := r.call.Recv()
-		if err != nil {
+		r.buffer = append(r.buffer, req.GetPart()...)
+
+		if err == io.EOF {
+			r.done = true
+			break
+		} else if err != nil {
+			r.done = true
 			return 0, err
 		}
-
-		r.buffer = append(r.buffer, req.Part...)
 	}
 
-	n = copy(p, r.buffer[:len(p)])
-	r.buffer = r.buffer[len(p):]
+	n = len(p)
+	if n > len(r.buffer) {
+		n = len(r.buffer)
+		err = io.EOF
+	}
 
-	return n, nil
+	n = copy(p, r.buffer[:n])
+	r.buffer = r.buffer[n:]
+
+	return n, err
 }
 
 var _ io.Reader = &uploadReader{}

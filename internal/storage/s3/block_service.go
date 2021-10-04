@@ -10,8 +10,11 @@ import (
 	"context"
 	"io"
 	"math"
+	"net/http"
 	"strconv"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -19,6 +22,7 @@ import (
 	"github.com/minio/minio-go/v7"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
+	"github.com/mjpitz/aetherfs/internal/blocks"
 	"github.com/mjpitz/aetherfs/internal/headers"
 )
 
@@ -32,42 +36,49 @@ type blockService struct {
 func (b *blockService) Lookup(ctx context.Context, request *blockv1.LookupRequest) (*blockv1.LookupResponse, error) {
 	objectKey := "blocks/" + request.Signature[0:2] + "/" + request.Signature[2:]
 
-	info, err := b.s3Client.StatObject(ctx, b.bucketName, objectKey, minio.StatObjectOptions{})
+	_, err := b.s3Client.StatObject(ctx, b.bucketName, objectKey, minio.StatObjectOptions{})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "internal server error")
-	}
+		if cast, ok := err.(minio.ErrorResponse); ok {
+			switch cast.StatusCode {
+			case http.StatusNotFound:
+				return nil, status.Errorf(codes.NotFound, "not found")
+			}
+		}
 
-	if info.Key == "" {
-		return nil, status.Errorf(codes.NotFound, "not found")
+		return nil, status.Errorf(codes.Internal, "internal server error")
 	}
 
 	return &blockv1.LookupResponse{}, nil
 }
 
 func (b *blockService) Download(request *blockv1.DownloadRequest, call blockv1.BlockAPI_DownloadServer) error {
+	logger := ctxzap.Extract(call.Context())
+
 	objectKey := "blocks/" + request.Signature[0:2] + "/" + request.Signature[2:]
 
 	resp, err := b.s3Client.GetObject(call.Context(), b.bucketName, objectKey, minio.GetObjectOptions{})
 	if err != nil {
+		logger.Error("failed to get object", zap.Error(err))
 		return status.Errorf(codes.Internal, "internal server error")
 	}
 
 	_, err = resp.Seek(request.Offset, io.SeekStart)
 	if err != nil {
+		logger.Error("seek failed", zap.Error(err))
 		return status.Errorf(codes.Internal, "internal server error")
 	}
 
 	// read 64KB blocks from resp until request.Size || the remaining file is read is read
 	// this should be the same same cache size
-	blockSize := (1 << 10) * 64
 	remaining := request.Size
 
-	part := make([]byte, 0, blockSize)
+	part := make([]byte, 0, blocks.PartSize)
 	for remaining > 0 {
-		length := int(math.Min(float64(blockSize), float64(remaining)))
+		length := int(math.Min(float64(blocks.PartSize), float64(remaining)))
 
 		_, err := resp.Read(part[:length])
-		if err != nil {
+		if err != nil && err != io.EOF {
+			logger.Error("read failed", zap.Error(err))
 			return status.Errorf(codes.Internal, "internal server error")
 		}
 
@@ -75,6 +86,7 @@ func (b *blockService) Download(request *blockv1.DownloadRequest, call blockv1.B
 			Part: part[:length],
 		})
 		if err != nil {
+			logger.Error("send failed", zap.Error(err))
 			return status.Errorf(codes.Internal, "")
 		}
 
@@ -125,6 +137,7 @@ func (b *blockService) Upload(call blockv1.BlockAPI_UploadServer) error {
 
 	_, err = b.s3Client.PutObject(ctx, b.bucketName, objectKey, reader, expectedSize, minio.PutObjectOptions{})
 	if err != nil {
+		ctxzap.Extract(ctx).Error("failed to put object", zap.Error(err))
 		return status.Errorf(codes.Internal, "internal server error")
 	}
 

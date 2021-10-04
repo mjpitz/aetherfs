@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"strings"
 
@@ -37,17 +36,17 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 	}
 
 	for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
-		switch {
-		case info.Err == io.EOF:
-			break
-		case info.Err != nil:
+		if info.Err != nil {
 			return nil, status.Errorf(codes.Internal, "internal server error")
 		}
 
-		if strings.HasPrefix(info.Key, "@") {
-			scopes = append(scopes, info.Key)
+		key := strings.TrimPrefix(info.Key, "datasets/")
+		key = strings.TrimSuffix(key, "/")
+
+		if strings.HasPrefix(key, "@") {
+			scopes = append(scopes, key)
 		} else {
-			resp.Datasets = append(resp.Datasets, info.Key)
+			resp.Datasets = append(resp.Datasets, key)
 		}
 	}
 
@@ -57,14 +56,14 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 		}
 
 		for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
-			switch {
-			case info.Err == io.EOF:
-				break
-			case info.Err != nil:
+			if info.Err != nil {
 				return nil, status.Errorf(codes.Internal, "internal server error")
 			}
 
-			resp.Datasets = append(resp.Datasets, scope+"/"+info.Key)
+			key := strings.TrimPrefix(info.Key, "datasets/")
+			key = strings.TrimSuffix(key, "/")
+
+			resp.Datasets = append(resp.Datasets, key)
 		}
 	}
 
@@ -78,16 +77,16 @@ func (d *datasetService) ListTags(ctx context.Context, request *datasetv1.ListTa
 
 	resp := &datasetv1.ListTagsResponse{}
 	for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
-		switch {
-		case info.Err == io.EOF:
-			break
-		case info.Err != nil:
+		if info.Err != nil {
 			return nil, status.Errorf(codes.Internal, "internal server error")
 		}
 
+		key := strings.TrimPrefix(info.Key, opts.Prefix)
+		key = strings.TrimSuffix(key, "/")
+
 		resp.Tags = append(resp.Tags, &datasetv1.Tag{
 			Name:    request.Name,
-			Version: info.Key,
+			Version: key,
 		})
 	}
 

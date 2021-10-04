@@ -145,9 +145,14 @@ func (f *datasetFile) Readdir(count int) ([]fs.FileInfo, error) {
 	seen := make(map[string]bool)
 	var infos []fs.FileInfo
 
+	prefix := strings.TrimSuffix(f.filePath, "/")
+	if prefix != "" {
+		prefix = prefix + "/"
+	}
+
 	for _, file := range f.dataset.GetFiles() {
-		if strings.HasPrefix(file.Name, f.filePath) {
-			remaining := strings.TrimPrefix(file.Name, f.filePath)
+		if strings.HasPrefix(file.Name, prefix) {
+			remaining := strings.TrimPrefix(file.Name, prefix)
 			remaining = strings.TrimPrefix(remaining, "/")
 
 			idx := strings.Index(remaining, "/")

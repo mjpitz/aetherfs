@@ -15,7 +15,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -73,10 +72,7 @@ func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, er
 	}
 
 	lifecycle.Defer(func(ctx context.Context) {
-		err = cc.Close()
-		if err != nil {
-			ctxzap.Extract(ctx).Error("failed to close grpc client connection", zap.Error(err))
-		}
+		_ = cc.Close()
 	})
 
 	return cc, nil

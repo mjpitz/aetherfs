@@ -8,5 +8,5 @@ package headers
 
 const (
 	AetherFSBlockSignature = "X-AFS-Block-Signature"
-	AetherFSBlockSize = "X-AFS-Block-Size"
+	AetherFSBlockSize      = "X-AFS-Block-Size"
 )
