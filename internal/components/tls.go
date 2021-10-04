@@ -14,10 +14,10 @@ import (
 
 // TLSConfig defines common configuration that can be used to LoadCertificates for encrypted communication.
 type TLSConfig struct {
-	Enable               bool   `json:"enable,omitempty"                usage:"enable TLS communication"`
-	CertificateAuthority string `json:"certificate_authority,omitempty" usage:"specify the certificate authority"`
-	Certificate          string `json:"certificate,omitempty"           usage:"specify the certificate to use for communication"`
-	PrivateKey           string `json:"private_key,omitempty"           usage:"specify the private key to use for communication"`
+	Enable               bool   `json:"enable"                usage:"enable TLS communication"`
+	CertificateAuthority string `json:"certificate_authority" usage:"specify the certificate authority"`
+	Certificate          string `json:"certificate"           usage:"specify the certificate to use for communication"`
+	PrivateKey           string `json:"private_key"           usage:"specify the private key to use for communication"`
 }
 
 // LoadCertificates uses the provided TLSConfig to load the various certificates and return a proper tls.Config. This

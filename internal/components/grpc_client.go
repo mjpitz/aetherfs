@@ -15,7 +15,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -30,8 +29,8 @@ const defaultServiceConfig = `{
 }`
 
 type GRPCClientConfig struct {
-	Target    string    `json:"target,omitempty" usage:"address the grpc client should dial"`
-	TLSConfig TLSConfig `json:"tls,omitempty"`
+	Target    string    `json:"target" usage:"address the grpc client should dial"`
+	TLSConfig TLSConfig `json:"tls"`
 }
 
 func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, error) {
@@ -73,10 +72,7 @@ func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, er
 	}
 
 	lifecycle.Defer(func(ctx context.Context) {
-		err = cc.Close()
-		if err != nil {
-			ctxzap.Extract(ctx).Error("failed to close grpc client connection", zap.Error(err))
-		}
+		_ = cc.Close()
 	})
 
 	return cc, nil

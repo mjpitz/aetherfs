@@ -56,5 +56,6 @@ func Pull() *cli.Command {
 
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

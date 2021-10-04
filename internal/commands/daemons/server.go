@@ -23,12 +23,15 @@ import (
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/fs"
+	"github.com/mjpitz/aetherfs/internal/storage"
+	"github.com/mjpitz/aetherfs/internal/storage/s3"
 )
 
 // ServerConfig encapsulates the requirements for configuring and starting up the Server process.
 type ServerConfig struct {
-	GRPCServerConfig components.GRPCServerConfig `json:",omitempty"`
-	HTTPServerConfig components.HTTPServerConfig `json:",omitempty"`
+	HTTPServerConfig components.HTTPServerConfig `json:""`
+	GRPCServerConfig components.GRPCServerConfig `json:""`
+	StorageConfig    storage.Config              `json:"storage"`
 }
 
 // Server returns a command that will run the server process.
@@ -36,6 +39,15 @@ func Server() *cli.Command {
 	cfg := &ServerConfig{
 		HTTPServerConfig: components.HTTPServerConfig{
 			Port: 8080,
+		},
+		StorageConfig: storage.Config{
+			Driver: "s3",
+			S3: s3.Config{
+				Endpoint: "s3.amazonaws.com",
+				TLS: components.TLSConfig{
+					Enable: true,
+				},
+			},
 		},
 	}
 
@@ -57,13 +69,15 @@ func Server() *cli.Command {
 			blockAPI := blockv1.NewBlockAPIClient(serverConn)
 			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
 
-			blockSvc := &blockService{}
-			datasetSvc := &datasetService{}
+			stores, err := storage.ObtainStores(cfg.StorageConfig)
+			if err != nil {
+				return err
+			}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
-			blockv1.RegisterBlockAPIServer(grpcServer, blockSvc)
-			datasetv1.RegisterDatasetAPIServer(grpcServer, datasetSvc)
+			blockv1.RegisterBlockAPIServer(grpcServer, stores.BlockAPIServer)
+			datasetv1.RegisterDatasetAPIServer(grpcServer, stores.DatasetAPIServer)
 
 			// setup api routes
 			apiServer := runtime.NewServeMux()
@@ -130,5 +144,6 @@ func Server() *cli.Command {
 			<-ctx.Done()
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

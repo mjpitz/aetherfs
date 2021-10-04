@@ -31,8 +31,8 @@ message LookupResponse {}
 // cluster peers, typically in smaller parts to have better cache performance.
 message DownloadRequest {
   string signature = 1; // the id of the block to download
-  uint64 offset = 2;    // an offset within the block
-  uint64 size = 3;      // the number of bytes to read from a block (0 will read the remainder of the block)
+  int64 offset = 2;     // an offset within the block
+  int64 size = 3;       // the number of bytes to read from a block (0 will read the remainder of the block)
 }
 
 message DownloadResponse {

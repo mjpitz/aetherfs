@@ -17,10 +17,10 @@ import (
 
 // AuthConfig encapsulates all the configuration required to log in to an AetherFS instance.
 type AuthConfig struct {
-	auth.Config                 `json:",omitempty"`
-	components.GRPCClientConfig `json:",omitempty"`
+	auth.Config                 `json:""`
+	components.GRPCClientConfig `json:""`
 
-	Remove bool `json:"remove,omitempty" usage:"set to prune existing credentials"`
+	Remove bool `json:"remove" usage:"set to prune existing credentials"`
 }
 
 // Auth returns a cli.Command that can be added to an existing application.
@@ -42,5 +42,6 @@ func Auth() *cli.Command {
 			}
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

@@ -28,10 +28,9 @@ import (
 
 // AgentConfig encapsulates the requirements for configuring and starting up the Agent process.
 type AgentConfig struct {
-	GRPCServerConfig components.GRPCServerConfig `json:",omitempty"`
-	HTTPServerConfig components.HTTPServerConfig `json:",omitempty"`
-
-	ServerClientConfig components.GRPCClientConfig `json:"server,omitempty"`
+	HTTPServerConfig   components.HTTPServerConfig `json:""`
+	GRPCServerConfig   components.GRPCServerConfig `json:""`
+	ServerClientConfig components.GRPCClientConfig `json:"server"`
 }
 
 // Agent returns a command that will run the agent process.
@@ -72,7 +71,7 @@ func Agent() *cli.Command {
 				blockAPI:   blockAPI,
 				datasetAPI: datasetAPI,
 			}
-			blockSvc := &blockService{}
+			blockSvc := &blockv1.UnimplementedBlockAPIServer{}
 
 			// setup grpc
 			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
@@ -144,5 +143,6 @@ func Agent() *cli.Command {
 			<-ctx.Done()
 			return nil
 		},
+		HideHelpCommand: true,
 	}
 }

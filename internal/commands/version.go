@@ -25,5 +25,6 @@ func Version() *cli.Command {
 				Must(template.New("version").Parse(versionTemplate)).
 				Execute(ctx.App.Writer, ctx.App)
 		},
+		HideHelpCommand: true,
 	}
 }

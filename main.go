@@ -31,9 +31,9 @@ var commit = "none"
 var date = time.Now().Format(time.RFC3339)
 
 type GlobalConfig struct {
-	Log      logger.Config `json:"log,omitempty"`
-	StateDir string        `json:"state_dir,omitempty" usage:"location where AetherFS can write small amounts of data"`
-	Config   string        `json:"config,omitempty"    usage:"location of the command configuration file"`
+	Log      logger.Config `json:"log"`
+	StateDir string        `json:"state_dir" usage:"location where AetherFS can write small amounts of data"`
+	Config   string        `json:"config"    usage:"location of the command configuration file"`
 }
 
 func main() {
@@ -85,10 +85,10 @@ func main() {
 		EnableBashCompletion: true,
 		BashComplete:         cli.DefaultAppComplete,
 		Metadata: map[string]interface{}{
-			"OS":           runtime.GOOS,
-			"Architecture": runtime.GOARCH,
-			"Go":           strings.TrimPrefix(runtime.Version(), "go"),
-			"Compiled":     date,
+			"arch":       runtime.GOARCH,
+			"compiled":   date,
+			"go_version": strings.TrimPrefix(runtime.Version(), "go"),
+			"os":         runtime.GOOS,
 		},
 	}
 

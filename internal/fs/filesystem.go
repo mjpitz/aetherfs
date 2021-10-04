@@ -115,7 +115,7 @@ func (f *FileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 			blockAPI: f.BlockAPI,
 			dataset:  resp.GetDataset(),
 			filePath: filePath,
-			file:     requestedFile,		// maybe nil
+			file:     requestedFile, // maybe nil
 		}, nil
 	}
 

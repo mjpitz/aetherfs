@@ -22,7 +22,7 @@ option java_multiple_files = true;
 // ListRequest lists all datasets the authenticated user has access to.
 message ListRequest {
   string page_token = 1; // the token used to manage pagination.
-  uint32 page_size = 2;  // the number of results to include in the page.
+  int32 page_size = 2;  // the number of results to include in the page.
 }
 
 message ListResponse {
@@ -34,7 +34,7 @@ message ListResponse {
 message ListTagsRequest {
   string name = 1;       // the name of the dataset.
   string page_token = 2; // the token used to manage pagination.
-  uint32 page_size = 3;  // the number of results to include in the page.
+  int32 page_size = 3;  // the number of results to include in the page.
 }
 
 message ListTagsResponse {
