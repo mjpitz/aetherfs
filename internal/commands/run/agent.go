@@ -4,7 +4,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
-package daemons
+package run
 
 import (
 	"fmt"
@@ -16,7 +16,6 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc/metadata"
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
@@ -40,7 +39,7 @@ func Agent() *cli.Command {
 			Port: 8080,
 		},
 		ServerClientConfig: components.GRPCClientConfig{
-			Target: "aetherfs-server:8080",
+			Target: "aetherfs-hub:8080",
 		},
 	}
 
@@ -88,38 +87,33 @@ func Agent() *cli.Command {
 
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
-			ginServer.Use(func(ginctx *gin.Context) {
-				// preprocess headers into grpc metadata
-				md := metadata.New(nil)
-				for k, vv := range ginctx.Request.Header {
-					md.Set(k, vv...)
-				}
+			ginServer.Use(
+				components.TranslateHeadersToMetadata(),
+				func(ginctx *gin.Context) {
+					writer := ginctx.Writer
+					request := ginctx.Request
 
-				ctx := metadata.NewIncomingContext(ginctx.Request.Context(), md)
-				ginctx.Request = ginctx.Request.WithContext(ctx)
+					switch {
+					case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
+						// handle FileServer requests (need to trim prefix)
+						fileSystem := &fs.FileSystem{
+							Context:    ginctx.Request.Context(),
+							BlockAPI:   blockAPI,
+							DatasetAPI: datasetAPI,
+						}
 
-				writer := ginctx.Writer
-				request := ginctx.Request
+						handler := http.FileServer(fileSystem)
+						handler = http.StripPrefix("/v1/fs/", handler)
 
-				switch {
-				case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
-					// handle FileServer requests (need to trim prefix)
-					request.URL.Path = strings.TrimPrefix(request.URL.Path, "/v1/fs/")
+						handler.ServeHTTP(writer, request)
 
-					fileSystem := &fs.FileSystem{
-						Context:    ctx,
-						BlockAPI:   blockAPI,
-						DatasetAPI: datasetAPI,
+					case strings.HasPrefix(request.URL.Path, "/v1/"):
+						// handle grpc-gateway requests
+						apiServer.ServeHTTP(writer, request)
+
 					}
-
-					http.FileServer(fileSystem).ServeHTTP(writer, request)
-
-				case strings.HasPrefix(request.URL.Path, "/v1/"):
-					// handle grpc-gateway requests
-					apiServer.ServeHTTP(writer, request)
-
-				}
-			})
+				},
+			)
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,

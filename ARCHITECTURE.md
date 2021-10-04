@@ -6,8 +6,8 @@
 * [Overview](#overview)
   * [Requirements](#requirements)
   * [Components](#components)
+    * [AetherFS Hub](#aetherfs-hub)
     * [AetherFS Agent](#aetherfs-agent)
-    * [AetherFS Server](#aetherfs-server)
 * [Implementation](#implementation)
   * [Interfaces](#interfaces)
     * [HTTP File Server](#http-file-server)
@@ -112,10 +112,10 @@ AetherFS is distributed as a single binary. Each component provides both a REST 
 streaming APIs, not all gRPC calls are available on the REST interface. Additionally, the REST interface provides an
 [HTTP file server](#http-file-server) where files can be read directly.
 
-#### AetherFS Server
+#### AetherFS Hub
 
-The AetherFS server is the primary component in AetherFS. It provides the core interfaces that are leverage by all other
-components in AetherFS. The server is responsible for managing the underlying storage tier and verifying the
+The AetherFS Hub is the primary component in AetherFS. It provides the core interfaces that are leverage by all other
+components in AetherFS. The hub is responsible for managing the underlying storage tier and verifying the
 authenticated clients have access to the desired dataset.
 
 #### AetherFS Agent

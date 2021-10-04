@@ -4,7 +4,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
-package daemons
+package run
 
 import (
 	"fmt"
@@ -16,7 +16,6 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc/metadata"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
@@ -27,16 +26,16 @@ import (
 	"github.com/mjpitz/aetherfs/internal/storage/s3"
 )
 
-// ServerConfig encapsulates the requirements for configuring and starting up the Server process.
-type ServerConfig struct {
+// HubConfig encapsulates the requirements for configuring and starting up the Hub process.
+type HubConfig struct {
 	HTTPServerConfig components.HTTPServerConfig `json:""`
 	GRPCServerConfig components.GRPCServerConfig `json:""`
 	StorageConfig    storage.Config              `json:"storage"`
 }
 
-// Server returns a command that will run the server process.
-func Server() *cli.Command {
-	cfg := &ServerConfig{
+// Hub returns a command that will run the server process.
+func Hub() *cli.Command {
+	cfg := &HubConfig{
 		HTTPServerConfig: components.HTTPServerConfig{
 			Port: 8080,
 		},
@@ -52,10 +51,10 @@ func Server() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:        "server",
-		Usage:       "Runs the AetherFS Server process",
-		UsageText:   "aetherfs run server [options]",
-		Description: "The aetherfs-server process is responsible for the datasets in our small blob store.",
+		Name:        "hub",
+		Usage:       "Runs the AetherFS Hub process",
+		UsageText:   "aetherfs run hub [options]",
+		Description: "The aetherfs-hub process is responsible for collecting and hosting datasets.",
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			serverConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
@@ -89,38 +88,33 @@ func Server() *cli.Command {
 
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
-			ginServer.Use(func(ginctx *gin.Context) {
-				// preprocess headers into grpc metadata
-				md := metadata.New(nil)
-				for k, vv := range ginctx.Request.Header {
-					md.Set(k, vv...)
-				}
+			ginServer.Use(
+				components.TranslateHeadersToMetadata(),
+				func(ginctx *gin.Context) {
+					writer := ginctx.Writer
+					request := ginctx.Request
 
-				ctx := metadata.NewIncomingContext(ginctx.Request.Context(), md)
-				ginctx.Request = ginctx.Request.WithContext(ctx)
+					switch {
+					case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
+						// handle FileServer requests (need to trim prefix)
+						fileSystem := &fs.FileSystem{
+							Context:    ginctx.Request.Context(),
+							BlockAPI:   blockAPI,
+							DatasetAPI: datasetAPI,
+						}
 
-				writer := ginctx.Writer
-				request := ginctx.Request
+						handler := http.FileServer(fileSystem)
+						handler = http.StripPrefix("/v1/fs/", handler)
 
-				switch {
-				case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
-					// handle FileServer requests (need to trim prefix)
-					request.URL.Path = strings.TrimPrefix(request.URL.Path, "/v1/fs/")
+						handler.ServeHTTP(writer, request)
 
-					fileSystem := &fs.FileSystem{
-						Context:    ctx,
-						BlockAPI:   blockAPI,
-						DatasetAPI: datasetAPI,
+					case strings.HasPrefix(request.URL.Path, "/v1/"):
+						// handle grpc-gateway requests
+						apiServer.ServeHTTP(writer, request)
+
 					}
-
-					http.FileServer(fileSystem).ServeHTTP(writer, request)
-
-				case strings.HasPrefix(request.URL.Path, "/v1/"):
-					// handle grpc-gateway requests
-					apiServer.ServeHTTP(writer, request)
-
-				}
-			})
+				},
+			)
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,
@@ -140,7 +134,7 @@ func Server() *cli.Command {
 				return err
 			}
 
-			ctxzap.Extract(ctx.Context).Info("running server")
+			ctxzap.Extract(ctx.Context).Info("running hub")
 			<-ctx.Done()
 			return nil
 		},

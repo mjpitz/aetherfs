@@ -4,7 +4,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 // Written by Mya Pitzeruse, September 2021
 
-package daemons
+package run
 
 import (
 	"context"

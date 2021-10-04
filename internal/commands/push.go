@@ -90,7 +90,7 @@ func Push() *cli.Command {
 			// cache some metadata for later on to make things easier
 			publishRequest := &datasetv1.PublishRequest{
 				Dataset: &datasetv1.Dataset{
-					BlockSize: cfg.BlockSize * blocks.MiB,
+					BlockSize: cfg.BlockSize * int32(blocks.Mebibyte),
 				},
 			}
 

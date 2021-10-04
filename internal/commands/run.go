@@ -9,7 +9,7 @@ package commands
 import (
 	"github.com/urfave/cli/v2"
 
-	"github.com/mjpitz/aetherfs/internal/commands/daemons"
+	"github.com/mjpitz/aetherfs/internal/commands/run"
 )
 
 // Run returns a command that can execute a given part of the ecosystem.
@@ -19,8 +19,8 @@ func Run() *cli.Command {
 		Usage:     "Run the various AetherFS processes",
 		UsageText: "aetherfs run <process>",
 		Subcommands: []*cli.Command{
-			daemons.Agent(),
-			daemons.Server(),
+			//daemons.Agent(),
+			run.Hub(),
 		},
 		HideHelpCommand: true,
 	}
