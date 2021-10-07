@@ -22,7 +22,7 @@ help:
 
 legal: .legal
 .legal:
-	addlicense -f ./legal/header.txt -skip yaml .
+	addlicense -f ./legal/header.txt -skip yaml -skip yml .
 
 docker/devtools: .docker/devtools
 .docker/devtools:
