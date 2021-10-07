@@ -37,7 +37,7 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 
 	for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
 		if info.Err != nil {
-			return nil, status.Errorf(codes.Internal, "internal server error")
+			return nil, status.Errorf(codes.Internal, "failed to list datasets")
 		}
 
 		key := strings.TrimPrefix(info.Key, "datasets/")
@@ -57,7 +57,7 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 
 		for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
 			if info.Err != nil {
-				return nil, status.Errorf(codes.Internal, "internal server error")
+				return nil, status.Errorf(codes.Internal, "failed to list datasets")
 			}
 
 			key := strings.TrimPrefix(info.Key, "datasets/")
@@ -78,7 +78,7 @@ func (d *datasetService) ListTags(ctx context.Context, request *datasetv1.ListTa
 	resp := &datasetv1.ListTagsResponse{}
 	for info := range d.s3Client.ListObjects(ctx, d.bucketName, opts) {
 		if info.Err != nil {
-			return nil, status.Errorf(codes.Internal, "internal server error")
+			return nil, status.Errorf(codes.Internal, "failed to list tags")
 		}
 
 		key := strings.TrimPrefix(info.Key, opts.Prefix)
@@ -98,19 +98,19 @@ func (d *datasetService) Lookup(ctx context.Context, request *datasetv1.LookupRe
 
 	obj, err := d.s3Client.GetObject(ctx, d.bucketName, objectKey, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "")
+		return nil, status.Errorf(codes.Internal, "failed to lookup dataset")
 	}
 
 	data, err := ioutil.ReadAll(obj)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "")
+		return nil, status.Errorf(codes.Internal, "failed to read dataset")
 	}
 
 	dataset := &datasetv1.Dataset{}
 
 	err = json.Unmarshal(data, dataset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "")
+		return nil, status.Errorf(codes.Internal, "failed to unmarshal dataset")
 	}
 
 	return &datasetv1.LookupResponse{
@@ -121,7 +121,7 @@ func (d *datasetService) Lookup(ctx context.Context, request *datasetv1.LookupRe
 func (d *datasetService) Publish(ctx context.Context, request *datasetv1.PublishRequest) (*datasetv1.PublishResponse, error) {
 	data, err := json.Marshal(request.Dataset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "")
+		return nil, status.Errorf(codes.Internal, "failed to marshal dataset")
 	}
 
 	for _, tag := range request.Tags {
@@ -131,7 +131,7 @@ func (d *datasetService) Publish(ctx context.Context, request *datasetv1.Publish
 			bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "")
+			return nil, status.Errorf(codes.Internal, "failed to write tag")
 		}
 	}
 

@@ -27,7 +27,7 @@ func (f *fileInfo) Size() int64 {
 		return 0
 	}
 
-	return int64(f.file.GetSize())
+	return f.file.GetSize()
 }
 
 func (f *fileInfo) Mode() fs.FileMode {

@@ -11,6 +11,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0
 	github.com/minio/minio-go/v7 v7.0.14
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/rs/cors v1.8.0
 	github.com/stretchr/testify v1.7.0

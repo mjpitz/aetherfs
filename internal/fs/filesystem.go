@@ -26,8 +26,8 @@ type FileSystem struct {
 	DatasetAPI datasetv1.DatasetAPIClient
 }
 
-// renderDatasetList renders top level nodes that list datasets within the file system.
-func (f *FileSystem) renderDatasetList(scope string) (http.File, error) {
+// openDatasetList renders top level nodes that list datasets within the File system.
+func (f *FileSystem) openDatasetList(scope string) (http.File, error) {
 	listResp, err := f.DatasetAPI.List(f.Context, &datasetv1.ListRequest{})
 	if err != nil {
 		return nil, translateError(err)
@@ -59,8 +59,8 @@ func (f *FileSystem) renderDatasetList(scope string) (http.File, error) {
 	}, nil
 }
 
-// renderTagList renders the list of tags for the provided dataset.
-func (f *FileSystem) renderTagList(scope, dataset string) (http.File, error) {
+// openTagList renders the list of tags for the provided dataset.
+func (f *FileSystem) openTagList(scope, dataset string) (http.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
@@ -79,14 +79,14 @@ func (f *FileSystem) renderTagList(scope, dataset string) (http.File, error) {
 	}, nil
 }
 
-// renderDatasetFile renders a files within a given tagged dataset.
-func (f *FileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (http.File, error) {
+// openDatasetFile renders a files within a given tagged dataset.
+func (f *FileSystem) openDatasetFile(scope, dataset, tag, filePath string) (http.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
 
 	// load dataset
-	// filePath may be a directory (prefix) or datasetFile within the given dataset
+	// CurrentPath may be a directory (prefix) or DatasetFile within the given dataset
 	resp, err := f.DatasetAPI.Lookup(f.Context, &datasetv1.LookupRequest{
 		Tag: &datasetv1.Tag{
 			Name:    dataset,
@@ -110,19 +110,19 @@ func (f *FileSystem) renderDatasetFile(scope, dataset, tag, filePath string) (ht
 	}
 
 	if requestedFile != nil || isDirectory {
-		return &datasetFile{
-			ctx:      f.Context,
-			blockAPI: f.BlockAPI,
-			dataset:  resp.GetDataset(),
-			filePath: filePath,
-			file:     requestedFile, // maybe nil
+		return &DatasetFile{
+			Context:     f.Context,
+			BlockAPI:    f.BlockAPI,
+			Dataset:     resp.GetDataset(),
+			CurrentPath: filePath,
+			File:        requestedFile, // maybe nil
 		}, nil
 	}
 
 	return nil, os.ErrNotExist
 }
 
-// Open is called with the full datasetFile path
+// Open is called with the full DatasetFile path
 // 1.631977188164028e+09   info    daemons/filesystem.go:18        open    {"name": "/test"}
 // 1.631977204080589e+09   info    daemons/filesystem.go:18        open    {"name": "/test/path"}
 // 1.6319772103438861e+09  info    daemons/filesystem.go:18        open    {"name": "/test/path.jpg"}
@@ -172,12 +172,12 @@ func (f *FileSystem) Open(name string) (http.File, error) {
 	filePath := parts[3]
 
 	if dataset == "" {
-		return f.renderDatasetList(scope)
+		return f.openDatasetList(scope)
 	} else if tag == "" {
-		return f.renderTagList(scope, dataset)
+		return f.openTagList(scope, dataset)
 	}
 
-	return f.renderDatasetFile(scope, dataset, tag, filePath)
+	return f.openDatasetFile(scope, dataset, tag, filePath)
 }
 
 var _ http.FileSystem = &FileSystem{}

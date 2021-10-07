@@ -77,7 +77,7 @@ func Push() *cli.Command {
 			}
 
 			conn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
-				Target: "localhost:8080",
+				Target: lookupHost(),
 			})
 			if err != nil {
 				return err

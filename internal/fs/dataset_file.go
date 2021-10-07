@@ -19,18 +19,19 @@ import (
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 )
 
-type datasetFile struct {
-	ctx context.Context
+type DatasetFile struct {
+	Context context.Context
 
-	blockAPI blockv1.BlockAPIClient
+	BlockAPI blockv1.BlockAPIClient
 
-	dataset    *datasetv1.Dataset
-	filePath   string
-	file       *datasetv1.File
+	Dataset     *datasetv1.Dataset
+	CurrentPath string
+	File        *datasetv1.File
+
 	fileOffset int64
 }
 
-func (f *datasetFile) Close() error {
+func (f *DatasetFile) Close() error {
 	return nil
 }
 
@@ -41,20 +42,20 @@ func min(a, b int64) int64 {
 	return b
 }
 
-func (f *datasetFile) Read(p []byte) (n int, err error) {
-	if f.file == nil {
+func (f *DatasetFile) Read(p []byte) (n int, err error) {
+	if f.File == nil {
 		return 0, os.ErrInvalid
 	}
 
-	if f.fileOffset >= f.file.Size {
+	if f.fileOffset >= f.File.Size {
 		return 0, io.EOF
 	}
 
-	blockSize := int64(f.dataset.BlockSize)
+	blockSize := int64(f.Dataset.BlockSize)
 	fileOffset := f.fileOffset
 
 	// factor in fileOffset which can reduce the total number of bytes that can be read
-	numBytesToRead := min(int64(len(p)), f.file.Size-fileOffset)
+	numBytesToRead := min(int64(len(p)), f.File.Size-fileOffset)
 
 	var numBlocksToRead int64
 	if numBytesToRead%blockSize > 0 {
@@ -63,8 +64,8 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 	numBlocksToRead += numBytesToRead / blockSize
 
 	var datasetFileOffset int64
-	for _, file := range f.dataset.Files {
-		if file.Name == f.file.Name {
+	for _, file := range f.Dataset.Files {
+		if file.Name == f.File.Name {
 			break
 		}
 
@@ -79,8 +80,8 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 
 	bytesRead := 0
 	for i := startingBlock; i < startingBlock+numBlocksToRead; i++ {
-		stream, err := f.blockAPI.Download(f.ctx, &blockv1.DownloadRequest{
-			Signature: f.dataset.Blocks[i],
+		stream, err := f.BlockAPI.Download(f.Context, &blockv1.DownloadRequest{
+			Signature: f.Dataset.Blocks[i],
 			Offset:    blockOffset,
 			Size:      min(blockSize, numBytesToRead-int64(bytesRead)),
 		})
@@ -93,6 +94,9 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 	LOOP:
 		for {
 			resp, err = stream.Recv()
+			copy(p[bytesRead:], resp.GetPart())
+			bytesRead += len(resp.GetPart())
+
 			switch {
 			case err == io.EOF:
 				break LOOP
@@ -100,9 +104,6 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 				// translate err
 				return bytesRead, translateError(err)
 			}
-
-			copy(p[bytesRead:], resp.Part)
-			bytesRead += len(resp.Part)
 		}
 
 		// every subsequent block should be read from the start
@@ -116,8 +117,8 @@ func (f *datasetFile) Read(p []byte) (n int, err error) {
 	return bytesRead, err
 }
 
-func (f *datasetFile) Seek(offset int64, whence int) (int64, error) {
-	if f.file == nil {
+func (f *DatasetFile) Seek(offset int64, whence int) (int64, error) {
+	if f.File == nil {
 		return 0, os.ErrInvalid
 	}
 
@@ -128,29 +129,29 @@ func (f *datasetFile) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		next = f.fileOffset + offset
 	case io.SeekEnd:
-		next = f.file.Size + offset
+		next = f.File.Size + offset
 	default:
-		return 0, errors.New("daemons.datasetFile.Seek: invalid whence")
+		return 0, errors.New("daemons.DatasetFile.Seek: invalid whence")
 	}
 
 	if next < 0 {
-		return 0, errors.New("daemons.datasetFile.Seek: negative position")
+		return 0, errors.New("daemons.DatasetFile.Seek: negative position")
 	}
 
 	f.fileOffset = next
 	return next, nil
 }
 
-func (f *datasetFile) Readdir(count int) ([]fs.FileInfo, error) {
+func (f *DatasetFile) Readdir(count int) ([]fs.FileInfo, error) {
 	seen := make(map[string]bool)
 	var infos []fs.FileInfo
 
-	prefix := strings.TrimSuffix(f.filePath, "/")
+	prefix := strings.TrimSuffix(f.CurrentPath, "/")
 	if prefix != "" {
 		prefix = prefix + "/"
 	}
 
-	for _, file := range f.dataset.GetFiles() {
+	for _, file := range f.Dataset.GetFiles() {
 		if strings.HasPrefix(file.Name, prefix) {
 			remaining := strings.TrimPrefix(file.Name, prefix)
 			remaining = strings.TrimPrefix(remaining, "/")
@@ -175,13 +176,13 @@ func (f *datasetFile) Readdir(count int) ([]fs.FileInfo, error) {
 	return infos, nil
 }
 
-func (f *datasetFile) Stat() (fs.FileInfo, error) {
-	name := f.filePath[strings.LastIndex(f.filePath, "/")+1:]
+func (f *DatasetFile) Stat() (fs.FileInfo, error) {
+	name := f.CurrentPath[strings.LastIndex(f.CurrentPath, "/")+1:]
 
 	return &fileInfo{
 		name: name,
-		file: f.file,
+		file: f.File,
 	}, nil
 }
 
-var _ http.File = &datasetFile{}
+var _ http.File = &DatasetFile{}
