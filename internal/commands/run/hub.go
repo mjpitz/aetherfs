@@ -43,9 +43,7 @@ func Hub() *cli.Command {
 			Driver: "s3",
 			S3: s3.Config{
 				Endpoint: "s3.amazonaws.com",
-				TLS: components.TLSConfig{
-					Enable: true,
-				},
+				TLS: components.TLSConfig{},
 			},
 		},
 	}

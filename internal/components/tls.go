@@ -10,14 +10,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 // TLSConfig defines common configuration that can be used to LoadCertificates for encrypted communication.
 type TLSConfig struct {
-	Enable               bool   `json:"enable"                usage:"enable TLS communication"`
-	CertificateAuthority string `json:"certificate_authority" usage:"specify the certificate authority"`
-	Certificate          string `json:"certificate"           usage:"specify the certificate to use for communication"`
-	PrivateKey           string `json:"private_key"           usage:"specify the private key to use for communication"`
+	CertPath string `json:"cert_path" usage:"where to locate certificates for communication"`
 }
 
 // LoadCertificates uses the provided TLSConfig to load the various certificates and return a proper tls.Config. This
@@ -34,15 +33,23 @@ type TLSConfig struct {
 // `cfg.ClientAuth = tls.RequireAndVerifyClientCert` to enable mTLS.
 //
 func LoadCertificates(cfg TLSConfig) (*tls.Config, error) {
-	if !cfg.Enable {
+	if cfg.CertPath == "" {
 		return nil, nil
 	}
+
+	caPath := filepath.Join(cfg.CertPath, "ca.pem")
+	certPath := filepath.Join(cfg.CertPath, "cert.pem")
+	keyPath := filepath.Join(cfg.CertPath, "key.pem")
+
+	_, caPathErr := os.Stat(caPath)
+	_, certPathErr := os.Stat(certPath)
+	_, keyPathErr := os.Stat(keyPath)
 
 	var caCertPool *x509.CertPool
 	var certificates []tls.Certificate
 
-	if cfg.CertificateAuthority != "" {
-		caCert, err := ioutil.ReadFile(cfg.CertificateAuthority)
+	if caPathErr == nil {
+		caCert, err := ioutil.ReadFile(caPath)
 		if err != nil {
 			return nil, err
 		}
@@ -51,8 +58,8 @@ func LoadCertificates(cfg TLSConfig) (*tls.Config, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 	}
 
-	if cfg.Certificate != "" && cfg.PrivateKey != "" {
-		cert, err := tls.LoadX509KeyPair(cfg.Certificate, cfg.PrivateKey)
+	if certPathErr == nil && keyPathErr == nil {
+		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
 			return nil, err
 		}
