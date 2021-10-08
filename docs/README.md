@@ -1,5 +1,5 @@
 AetherFS assists in the production, distribution, and replication of embedded databases and in-memory datasets. It
-provides engineers with a platform to manage collections files called datasets. AetherFS optimizes its use of the 
+provides engineers with a platform to manage collections of files called datasets. AetherFS optimizes its use of the 
 underlying blob store (AWS S3 or equivalent) to reduce cost to operators and improve performance for end users.
 
 _Why not use S3 directly or a file server?_
