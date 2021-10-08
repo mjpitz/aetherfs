@@ -1,8 +1,6 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
-//
-// Proprietary and confidential.
-// Unauthorized copying of this file, via any medium is strictly prohibited.
-// Written by Mya Pitzeruse, September 2021
+// See LICENSE for more information.
+
 package main
 
 import (
@@ -14,7 +12,6 @@ import (
 	"time"
 
 	"github.com/urfave/cli/v2"
-	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
@@ -31,9 +28,9 @@ var commit = "none"
 var date = time.Now().Format(time.RFC3339)
 
 type GlobalConfig struct {
-	Log      logger.Config `json:"log"`
-	StateDir string        `json:"state_dir" usage:"location where AetherFS can write small amounts of data"`
-	Config   string        `json:"config"    usage:"location of the command configuration file"`
+	Log logger.Config `json:"log"`
+	//StateDir string        `json:"state_dir" usage:"location where AetherFS can write small amounts of data"`
+	//Config   string        `json:"config"    usage:"location of the command configuration file"`
 }
 
 func main() {
@@ -44,13 +41,12 @@ func main() {
 		format = "console" // looks like terminal session, use console logging
 	}
 
-	logLevel := zapcore.InfoLevel
 	cfg := &GlobalConfig{
 		Log: logger.Config{
-			Level:  &logLevel,
+			Level:  "info",
 			Format: format,
 		},
-		StateDir: "/usr/local/aetherfs",
+		//StateDir: "/usr/local/aetherfs",
 	}
 
 	app := &cli.App{
