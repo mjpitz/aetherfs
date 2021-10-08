@@ -1,0 +1,13 @@
+apiVersion: v2
+type: application
+name: aetherfs-hub
+description: Run and manage your own AetherFS data hub.
+home: https://aetherfs.tech
+sources:
+  - https://github.com/mjpitz/aetherfs
+maintainers:
+  - name: Mya Pitzeruse
+    email: j.mya.pitz@gmail.com
+version: "0.0.0"
+appVersion: "latest"
+dependencies: []

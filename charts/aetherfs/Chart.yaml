@@ -1,0 +1,25 @@
+apiVersion: v2
+type: application
+name: aetherfs
+description: A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).
+home: https://aetherfs.tech
+sources:
+  - https://github.com/mjpitz/aetherfs
+maintainers:
+  - name: Mya Pitzeruse
+    email: j.mya.pitz@gmail.com
+version: "0.0.0"
+appVersion: "latest"
+dependencies:
+  - repository: file://../aetherfs-hub/
+    name: aetherfs-hub
+    version: "*"
+    condition: aetherfs-hub.enabled
+  - repository: https://charts.dexidp.io
+    name: dex
+    version: 0.5.0
+    condition: dex.enabled
+  - repository: https://helm.min.io/
+    name: minio
+    version: 8.0.9
+    condition: minio.enabled
