@@ -1,5 +1,9 @@
-AetherFS assists in the production, distribution, and replication of embedded databases and in-memory datasets. It
-provides engineers with a platform to manage collections of files called datasets. AetherFS optimizes its use of the 
+AetherFS assists in the production, distribution, and replication of embedded databases and in-memory datasets.
+You can think of it like [Docker][], but for data.
+
+[Docker]: https://docker.com
+
+AetherFS provides engineers with a platform to manage collections of files called datasets. It optimizes its use of the 
 underlying blob store (AWS S3 or equivalent) to reduce cost to operators and improve performance for end users.
 
 _Why not use S3 directly or a file server?_
@@ -18,15 +22,15 @@ download new or updated portions.
 
 ## Status
 
-This project is under active development.
+This project is under active development. The lists below details a list of aspirational features and documentation.
 
 - Documentation
   - Architecture Document
 - Features
   - HTTP file server for ease of interaction
   - REST and gRPC APIs for programmatic interaction
-  - Optional agent that can manage a shared file systems
-  - Efficiently persist and query information stored in [AWS S3][] (or compatible)
+  - Optional agent that can manage a shared or FUSE file system
+  - Efficiently persist and query information stored in [AWS S3][]
   - Authenticate using common schemes (such as OIDC)
   - Enforce access control around datasets
   - Encrypt data in transit and at rest
@@ -35,12 +39,31 @@ This project is under active development.
 [AWS S3]: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html
 
 
-### Expectations
+## Expectations & Roadmap
 
-This is a project I'm mostly iterating on in my free time. It's closed source, and I have no intent to open source. If
-you're interested in learning more or getting updates, please sign up using the link below.
+Since I'm mostly iterating on this project in my free time, I plan on using [calendar versioning][]. Bugfixes and minor
+features can be introduced in any patch version but any major feature should wait for the next release. Releases happen 
+in October, February, and June (every 4 months). Any security issues will be addressed in a timely manner, regardless of
+release schedule.
 
+[calendar versioning]: https://calver.org
 
-[![Project Interest Form][]](https://forms.gle/uCMy38ZLEchfNuka9)
+### v21.10
 
-[Project Interest Form]: https://img.shields.io/badge/-Project%20Interest%20Form-blue?style=for-the-badge
+This will be the initial release of AetherFS. It includes the "essentials".
+
+- Single binary containing all components.
+- Command to run an AetherFS data hub.
+- Command to upload to and tag datasets in AetherFS.
+- Command to download tagged datasets from AetherFS.
+- Data encrypted in transit.
+
+### v22.02
+
+As the second major release of the AetherFS system, this will include additional security measures and helps simplify
+interaction for end users (provided there's interest in the system).
+
+- Command to run an agent process with a FUSE file system.
+- Block caching to improve performance and usage of S3.
+- Command to authenticate clients.
+- Enforce access controls around datasets.
