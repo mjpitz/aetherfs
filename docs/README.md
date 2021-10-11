@@ -22,7 +22,7 @@ download new or updated portions.
 
 ## Status
 
-This project is under active development. The lists below details a list of aspirational features and documentation.
+This project is under active development. The lists below detail aspirational features and documentation.
 
 - Documentation
   - Architecture Document
