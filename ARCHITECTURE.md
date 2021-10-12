@@ -5,15 +5,14 @@
   * [Concepts](#concepts)
 * [Overview](#overview)
   * [Requirements](#requirements)
+* [Implementation](#implementation)
   * [Components](#components)
     * [AetherFS Hub](#aetherfs-hub)
     * [AetherFS Agent](#aetherfs-agent)
-* [Implementation](#implementation)
   * [Interfaces](#interfaces)
+    * [REST & gRPC](#rest--grpc)
     * [HTTP File Server](#http-file-server)
-    * [Agent API](#agent-api)
-    * [Block API](#block-api)
-    * [Dataset API](#dataset-api)
+    * [FUSE File System](#fuse-file-system)
     * [Web](#web)
   * [Configuration](#configuration)
     * [Clustering](#clustering)
@@ -36,7 +35,7 @@ resilient artifact distribution).
 
 Sometime after Indeed developed RAD internally, we saw a similar system open sourced from [Netflix][] called [Hollow][].
 Hollow is a Java library used to distribute in-memory datasets. Unlike RAD's file-system based approach, Hollow stored 
-everything in S3. While I have not used Hollow myself, I can see the utility it provides to Java ecosystem.
+everything in S3. While I have not used Hollow myself, I see the utility it provides to Java ecosystem.
 
 [Indeed]: https://www.indeed.com
 [RAD]: https://www.youtube.com/watch?v=lDXdf5q8Yw8
@@ -66,6 +65,18 @@ dataset. This is particularly useful should you need to rollback a change to a d
 
 [semantic]: https://semver.org/
 [calendar]: https://calver.org/
+
+_**NOTE:** In theory, this system could be used as a generalized package manager, in which the term "artifact" would be
+appropriate. However, that is not my intent for this project._
+
+**Blocks**
+
+When clients push a dataset into AetherFS, its contents are broken up into fixed sized _blocks_. This allows smaller
+files to be stored as a single block and larger ones to be broken up into multiple smaller ones. In the end, their goal
+is to reduce the amount of data between versions and reduce the number of calls made to the backend.
+
+Blocks are immutable, which allows them to be cached amongst your agents. This allows hot data to be read from your
+peers instead of making a call to your underlying storage tier.
 
 **BitTorrent**
 
@@ -99,12 +110,16 @@ datasets.
 
 ### Requirements
 
-  - Efficiently use [AWS S3][] (or equivalent) to store dataset information.
+  - Efficiently store and query information in [AWS S3][] (or equivalent).
   - Information should be encrypted in transit and at rest.
   - Authenticate clients (users and services) using common schemes (OIDC, Basic).
   - Enforce access controls around datasets.
   - Provide numerous interfaces to manage and access information in the system.
   - Built in developer tools to help producers understand the performance of their datasets.
+
+## Implementation
+
+<!-- todo: add some pretext here -->
 
 ### Components
 
@@ -121,93 +136,89 @@ authenticated clients have access to the desired dataset.
 #### AetherFS Agent
 
 The AetherFS agent is an optional sidecar process. It provides an application level cache for block data and can also
-manage a local file system path (if enabled). It provides a special [Agent API](#agent-api) that can publish datasets 
+manage a local file system path (if enabled). It provides a special `AgentAPI` that can publish datasets 
 programmatically.
-
-## Implementation
-
-<!--
-[![](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggVERcbiAgICBwcm9kdWNlclxuICAgIHByb2R1Y2VyLWFnZW50W2FldGhlcmZzLWFnZW50XVxuXG4gICAgY29uc3VtZXJcbiAgICBjb25zdW1lci1hZ2VudFthZXRoZXJmcy1hZ2VudF1cblxuICAgIHNlcnZlci0xW2FldGhlcmZzLXNlcnZlcl1cbiAgICBzZXJ2ZXItMlthZXRoZXJmcy1zZXJ2ZXJdXG4gICAgc2VydmVyLTNbYWV0aGVyZnMtc2VydmVyXVxuXG4gICAgYXdzLXMzW0FXIFMzXVxuXG4gICAgc3ViZ3JhcGggcHJvZHVjZXItcG9kXG4gICAgICAgIHByb2R1Y2VyIC0tIGFldGhlcmZzLmFnZW50LnYxLkFnZW50QVBJL1B1Ymxpc2ggLS0-IHByb2R1Y2VyLWFnZW50XG4gICAgZW5kXG5cbiAgICBzdWJncmFwaCBjb25zdW1lci1wb2RcbiAgICAgICAgY29uc3VtZXIgLS0gYWV0aGVyZnMuYWdlbnQudjEuQWdlbnRBUEkvU3Vic2NyaWJlIC0tPiBjb25zdW1lci1hZ2VudFxuICAgIGVuZFxuXG4gICAgcHJvZHVjZXItYWdlbnQgLS0gYWV0aGVyZnMuZGF0YXNldC52MS5EYXRhc2V0QVBJL1B1Ymxpc2ggLS0-IHNlcnZlci0xXG4gICAgcHJvZHVjZXItYWdlbnQgLS0gYWV0aGVyZnMuYmxvY2sudjEuQmxvY2tBUEkvVXBsb2FkIC0tPiBzZXJ2ZXItMlxuICAgIHByb2R1Y2VyLWFnZW50IC0tPiBzZXJ2ZXItM1xuXG4gICAgY29uc3VtZXItYWdlbnQgLS0-IHNlcnZlci0xXG4gICAgY29uc3VtZXItYWdlbnQgLS0gYWV0aGVyZnMuYmxvY2sudjEuQmxvY2tBUEkvRG93bmxvYWQgLS0-IHNlcnZlci0yXG4gICAgY29uc3VtZXItYWdlbnQgLS0gYWV0aGVyZnMuZGF0YXNldC52MS5EYXRhc2V0QVBJL1N1YnNjcmliZSAtLT4gc2VydmVyLTNcblxuICAgIHNlcnZlci0xIC0tPiBhd3MtczNcbiAgICBzZXJ2ZXItMiAtLT4gYXdzLXMzXG4gICAgc2VydmVyLTMgLS0-IGF3cy1zM1xuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjpmYWxzZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/edit/#eyJjb2RlIjoiZ3JhcGggVERcbiAgICBwcm9kdWNlclxuICAgIHByb2R1Y2VyLWFnZW50W2FldGhlcmZzLWFnZW50XVxuXG4gICAgY29uc3VtZXJcbiAgICBjb25zdW1lci1hZ2VudFthZXRoZXJmcy1hZ2VudF1cblxuICAgIHNlcnZlci0xW2FldGhlcmZzLXNlcnZlcl1cbiAgICBzZXJ2ZXItMlthZXRoZXJmcy1zZXJ2ZXJdXG4gICAgc2VydmVyLTNbYWV0aGVyZnMtc2VydmVyXVxuXG4gICAgYXdzLXMzW0FXIFMzXVxuXG4gICAgc3ViZ3JhcGggcHJvZHVjZXItcG9kXG4gICAgICAgIHByb2R1Y2VyIC0tIGFldGhlcmZzLmFnZW50LnYxLkFnZW50QVBJL1B1Ymxpc2ggLS0-IHByb2R1Y2VyLWFnZW50XG4gICAgZW5kXG5cbiAgICBzdWJncmFwaCBjb25zdW1lci1wb2RcbiAgICAgICAgY29uc3VtZXIgLS0gYWV0aGVyZnMuYWdlbnQudjEuQWdlbnRBUEkvU3Vic2NyaWJlIC0tPiBjb25zdW1lci1hZ2VudFxuICAgIGVuZFxuXG4gICAgcHJvZHVjZXItYWdlbnQgLS0gYWV0aGVyZnMuZGF0YXNldC52MS5EYXRhc2V0QVBJL1B1Ymxpc2ggLS0-IHNlcnZlci0xXG4gICAgcHJvZHVjZXItYWdlbnQgLS0gYWV0aGVyZnMuYmxvY2sudjEuQmxvY2tBUEkvVXBsb2FkIC0tPiBzZXJ2ZXItMlxuICAgIHByb2R1Y2VyLWFnZW50IC0tPiBzZXJ2ZXItM1xuXG4gICAgY29uc3VtZXItYWdlbnQgLS0-IHNlcnZlci0xXG4gICAgY29uc3VtZXItYWdlbnQgLS0gYWV0aGVyZnMuYmxvY2sudjEuQmxvY2tBUEkvRG93bmxvYWQgLS0-IHNlcnZlci0yXG4gICAgY29uc3VtZXItYWdlbnQgLS0gYWV0aGVyZnMuZGF0YXNldC52MS5EYXRhc2V0QVBJL1N1YnNjcmliZSAtLT4gc2VydmVyLTNcblxuICAgIHNlcnZlci0xIC0tPiBhd3MtczNcbiAgICBzZXJ2ZXItMiAtLT4gYXdzLXMzdFxuICAgIHNlcnZlci0zIC0tPiBhd3MtczNcbiIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)
--->
 
 ### Interfaces
 
+#### REST & gRPC
+
+Each component of the architecture provides a REST and gRPC interface for communication. While primarily used by
+internal components, these interfaces can be used by calling applications as well. However, AetherFS expects callers to
+interact with one of our other interfaces as they abstract away the complexity of the underlying storage.
+
+For the most part, AetherFS's interfaces are inspired by Docker and Git.
+
+**DatasetAPI**
+
+The `DatasetAPI` allows callers to interact with various datasets stored within AetherFS. Dataset manifests contain a
+complete list of files within the dataset, their sizes, and last modified timestamps. The manifests also contain a list 
+of blocks that are required to construct the dataset. Using these components, clients can piece together the underlying
+files.
+
+All REST routes sit under the `/v1/datasets` prefix.
+
+**BlockAPI**
+
+The `BlockAPI` gives callers direct access to the block data. You must use the `DatasetAPI` to obtain block references.
+The `BlockAPI` does not provide callers with the ability to list blocks (intentional design decision). An entire block
+can be read at a time, or just part of one.
+
+All REST routes sit under the `/v1/blocks` prefix.
+
 #### HTTP File Server
 
-[Golang's http.FileServer](https://pkg.go.dev/net/http#FileServer) implementation.
+Using [Golang's http.FileServer][], AetherFS was able to provide a quick prototype of a FileSystem implementation. Using
+[HTTP range requests][], callers are able to read segments of large files that may be too large to fit in memory all at
+once. Agents can still make use of caching to keep the data local to the process.
 
-[HTTP range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests)
+This currently resides under the `/v1/fs` prefix.
 
-#### Agent API
+[Golang's http.FileServer]: https://pkg.go.dev/net/http#FileServer
+[HTTP range requests]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
 
-#### Block API
+#### FUSE File System
 
-#### Dataset API
+<!-- todo, linux only feature (until OSX Fuse works again) -->
 
 #### Web
 
+<!-- todo -->
+
 ### Configuration
+
+<!-- todo: add some pretext -->
 
 #### Clustering
 
-<!-- how are clusters of nodes formed -->
+<!-- todo -->
 
 #### Persistence
 
-<!-- how and where is information stored -->
+<!-- todo -->
 
 #### Caching
 
-<!-- how and where is information cached -->
+<!-- todo -->
 
 ### Security & Privacy
 
+<!-- todo: add some pretext -->
+
 #### Authentication
 
-<!-- how are users and systems authenticated -->
+<!-- todo -->
 
 #### Authorization
+
+<!-- todo -->
 
 #### Encryption at Rest
 
 For the most part, AetherFS expects your small blob storage solution to provide this functionality. After an initial 
-search, it seemed like most solutions provide some form of encryption at rest.
+search, it seemed like most solutions provide some form of encryption at rest. Later on, we may add end-to-end
+encryption support (assuming interest).
 
 #### Encryption in Transit
 
 Where possible, our systems leverage TLS certificates to encrypt communication between processes.
-
-## Milestones
-
-AetherFS tags releases with [calendar versions](https://calver.org). The format for each release is as follows:
-
-![](https://img.shields.io/badge/calver-YY.0M.MICRO-22bfda.svg)
-
-### Deliverables
-
-#### v21.11
-
-- Components
-  - AetherFS Server
-- Interfaces
-  - HTTP File Server
-  - Block API
-  - Dataset API
-- Security & Privacy
-  - Encryption at Rest
-  - Encryption in Transit
-
-#### v22.05
-
-- Interfaces
-  - Web
-- Security & Privacy
-  - Authentication
-  - Authorization
-
-#### v22.11
-
-- Components
-  - AetherFS Agent
-- Interfaces
-  - Agent API

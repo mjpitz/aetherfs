@@ -52,20 +52,20 @@ service BlockAPI {
     option (google.api.http) = {
       custom: {
         kind: "HEAD"
-        path: "/v1/block/{signature}"
+        path: "/v1/blocks/{signature}"
       }
     };
   }
 
   rpc Download(DownloadRequest) returns (stream DownloadResponse) {
     option (google.api.http) = {
-      get: "/v1/block/{signature}"
+      get: "/v1/blocks/{signature}"
     };
   }
 
   rpc Upload(stream UploadRequest) returns (UploadResponse) {
     option (google.api.http) = {
-      post: "/v1/block"
+      post: "/v1/blocks"
       body: "*"
     };
   }
