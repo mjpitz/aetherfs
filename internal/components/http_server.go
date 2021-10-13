@@ -18,7 +18,7 @@ import (
 )
 
 type HTTPServerConfig struct {
-	Port      int       `json:"port" usage:"which port the HTTP server should be bound to"`
+	Port      int       `json:"port" usage:"which port the HTTP server should be bound to" default:"8080"`
 	TLSConfig TLSConfig `json:"tls"`
 }
 

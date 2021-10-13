@@ -17,7 +17,7 @@ import (
 )
 
 type Config struct {
-	Endpoint        string               `json:"endpoint"          usage:"location of s3 endpoint"`
+	Endpoint        string               `json:"endpoint"          usage:"location of s3 endpoint" default:"s3.amazonaws.com"`
 	TLS             components.TLSConfig `json:"tls"`
 	AccessKeyID     string               `json:"access_key_id"     usage:"the access key id used to identify the client"`
 	SecretAccessKey string               `json:"secret_access_key" usage:"the secret access key used to authenticate the client"`

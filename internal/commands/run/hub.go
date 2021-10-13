@@ -20,7 +20,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
-	"github.com/mjpitz/aetherfs/internal/storage/s3"
+	"github.com/mjpitz/aetherfs/internal/web"
 )
 
 // HubConfig encapsulates the requirements for configuring and starting up the Hub process.
@@ -32,18 +32,7 @@ type HubConfig struct {
 
 // Hub returns a command that will run the server process.
 func Hub() *cli.Command {
-	cfg := &HubConfig{
-		HTTPServerConfig: components.HTTPServerConfig{
-			Port: 8080,
-		},
-		StorageConfig: storage.Config{
-			Driver: "s3",
-			S3: s3.Config{
-				Endpoint: "s3.amazonaws.com",
-				TLS:      components.TLSConfig{},
-			},
-		},
-	}
+	cfg := &HubConfig{}
 
 	return &cli.Command{
 		Name:        "hub",
@@ -81,6 +70,9 @@ func Hub() *cli.Command {
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
 
+			// setup a ui handler
+			ui := web.Handle()
+
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
 			ginServer.Use(
@@ -107,6 +99,8 @@ func Hub() *cli.Command {
 						// handle grpc-gateway requests
 						apiServer.ServeHTTP(writer, request)
 
+					case strings.HasPrefix(request.URL.Path, "/ui/"):
+						ui.ServeHTTP(writer, request)
 					}
 				},
 			)

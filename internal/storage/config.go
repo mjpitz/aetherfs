@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Driver string `json:"driver" usage:"configure how information is stored"`
+	Driver string `json:"driver" usage:"configure how information is stored" default:"s3"`
 
 	S3 s3.Config `json:"s3"`
 }

@@ -14,8 +14,8 @@ import (
 
 // Config encapsulates the configurable elements of the logger.
 type Config struct {
-	Level  string `json:"level"  usage:"adjust the verbosity of the logs"`
-	Format string `json:"format" usage:"configure the format of the logs"`
+	Level  string `json:"level"  usage:"adjust the verbosity of the logs" default:"info"`
+	Format string `json:"format" usage:"configure the format of the logs" default:"json"`
 }
 
 // Setup creates a logger given the provided configuration.
