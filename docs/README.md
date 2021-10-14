@@ -56,6 +56,7 @@ This will be the initial release of AetherFS. It includes the "essentials".
 - Command to run an AetherFS data hub.
 - Command to upload to and tag datasets in AetherFS.
 - Command to download tagged datasets from AetherFS.
+- Minimal web interface.
 - Data encrypted in transit.
 
 ### v22.02

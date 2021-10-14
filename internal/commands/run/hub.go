@@ -90,6 +90,10 @@ func Hub() *cli.Command {
 			})
 			ginServer.Group("/ui").GET("*path", gin.WrapH(web2.Handle()))
 
+			ginServer.GET("/", func(ginctx *gin.Context) {
+				ginctx.Redirect(http.StatusTemporaryRedirect, "/ui")
+			})
+
 			err = components.ListenAndServeHTTP(
 				ctx.Context,
 				cfg.HTTPServerConfig,
