@@ -48,7 +48,7 @@ message GracefulShutdownResponse {}
 service AgentAPI {
   rpc Publish(PublishRequest) returns (PublishResponse) {
     option (google.api.http) = {
-      post: "/v1/agent/publish"
+      post: "/api/v1/agent/publish"
       body: "*"
     };
   }
@@ -57,7 +57,7 @@ service AgentAPI {
 
   rpc GracefulShutdown(GracefulShutdownRequest) returns (GracefulShutdownResponse) {
     option (google.api.http) = {
-      post: "/v1/agent/shutdown"
+      post: "/api/v1/agent/shutdown"
       body: "*"
     };
   }

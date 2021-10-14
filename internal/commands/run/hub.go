@@ -20,7 +20,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
-	"github.com/mjpitz/aetherfs/internal/storage/s3"
+	web2 "github.com/mjpitz/aetherfs/internal/web"
 )
 
 // HubConfig encapsulates the requirements for configuring and starting up the Hub process.
@@ -32,18 +32,7 @@ type HubConfig struct {
 
 // Hub returns a command that will run the server process.
 func Hub() *cli.Command {
-	cfg := &HubConfig{
-		HTTPServerConfig: components.HTTPServerConfig{
-			Port: 8080,
-		},
-		StorageConfig: storage.Config{
-			Driver: "s3",
-			S3: s3.Config{
-				Endpoint: "s3.amazonaws.com",
-				TLS:      components.TLSConfig{},
-			},
-		},
-	}
+	cfg := &HubConfig{}
 
 	return &cli.Command{
 		Name:        "hub",
@@ -83,33 +72,27 @@ func Hub() *cli.Command {
 
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
-			ginServer.Use(
-				components.TranslateHeadersToMetadata(),
-				func(ginctx *gin.Context) {
-					writer := ginctx.Writer
-					request := ginctx.Request
+			ginServer.Use(components.TranslateHeadersToMetadata())
 
-					switch {
-					case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
-						// handle FileServer requests (need to trim prefix)
-						fileSystem := &fs.FileSystem{
-							Context:    ginctx.Request.Context(),
-							BlockAPI:   blockAPI,
-							DatasetAPI: datasetAPI,
-						}
+			ginServer.Group("/api").Any("*path", gin.WrapH(apiServer))
+			ginServer.Group("/fs").GET("*path", func(ginctx *gin.Context) {
+				// handle FileServer requests (need to trim prefix)
+				fileSystem := &fs.FileSystem{
+					Context:    ginctx.Request.Context(),
+					BlockAPI:   blockAPI,
+					DatasetAPI: datasetAPI,
+				}
 
-						handler := http.FileServer(fileSystem)
-						handler = http.StripPrefix("/v1/fs/", handler)
+				handler := http.FileServer(fileSystem)
+				handler = http.StripPrefix("/fs/", handler)
 
-						handler.ServeHTTP(writer, request)
+				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
+			})
+			ginServer.Group("/ui").GET("*path", gin.WrapH(web2.Handle()))
 
-					case strings.HasPrefix(request.URL.Path, "/v1/"):
-						// handle grpc-gateway requests
-						apiServer.ServeHTTP(writer, request)
-
-					}
-				},
-			)
+			ginServer.GET("/", func(ginctx *gin.Context) {
+				ginctx.Redirect(http.StatusTemporaryRedirect, "/ui")
+			})
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,

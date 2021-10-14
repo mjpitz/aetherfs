@@ -24,14 +24,14 @@ message ListRequest {
 
 message ListResponse {
   string next_page_token = 1;   // the token associated with the start of the next page.
-  repeated string datasets = 2; // the list of datasets for the current page.
+  repeated Tag datasets = 2;    // the list of datasets for the current page.
 }
 
 // ListTagsRequest lists all tags for a given dataset the authenticated user as access to.
 message ListTagsRequest {
   string name = 1;       // the name of the dataset.
   string page_token = 2; // the token used to manage pagination.
-  int32 page_size = 3;  // the number of results to include in the page.
+  int32 page_size = 3;   // the number of results to include in the page.
 }
 
 message ListTagsResponse {
@@ -75,25 +75,25 @@ message SubscribeResponse {
 service DatasetAPI {
   rpc List(ListRequest) returns (ListResponse) {
     option (google.api.http) = {
-      get: "/v1/datasets"
+      get: "/api/v1/datasets"
     };
   }
 
   rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {
     option (google.api.http) = {
-      get: "/v1/datasets/{name}/tags"
+      get: "/api/v1/datasets/{name}/tags"
     };
   }
 
   rpc Lookup(LookupRequest) returns (LookupResponse) {
     option (google.api.http) = {
-      get: "/v1/datasets/{tag.name}/tags/{tag.version}"
+      get: "/api/v1/datasets/{tag.name}/tags/{tag.version}"
     };
   }
 
   rpc Publish(PublishRequest) returns (PublishResponse) {
     option (google.api.http) = {
-      post: "/v1/datasets"
+      post: "/api/v1/datasets"
       body: "*"
     };
   }

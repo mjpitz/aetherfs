@@ -201,12 +201,12 @@ func Push() *cli.Command {
 				)
 
 				call, err := blockAPI.Upload(uploadContext)
-				if err != nil {
-					st, ok := status.FromError(err)
-					if ok && st.Code() == codes.AlreadyExists {
-						logger.Info("block already exists", zap.String("signature", signature))
-						continue BlockLoop
-					}
+
+				st, ok := status.FromError(err)
+				if err == io.EOF || (ok && st.Code() == codes.AlreadyExists) {
+					logger.Info("block already exists", zap.String("signature", signature))
+					continue BlockLoop
+				} else if err != nil {
 					return err
 				}
 
@@ -220,19 +220,18 @@ func Push() *cli.Command {
 						Part: data[i:end],
 					})
 
-					if err != nil {
-						st, ok := status.FromError(err)
-						if ok && st.Code() == codes.AlreadyExists {
-							logger.Info("block already exists", zap.String("signature", signature))
-							continue BlockLoop
-						}
+					st, ok := status.FromError(err)
+					if err == io.EOF || (ok && st.Code() == codes.AlreadyExists) {
+						logger.Info("block already exists", zap.String("signature", signature))
+						continue BlockLoop
+					} else if err != nil {
 						return err
 					}
 				}
 
 				_, err = call.CloseAndRecv()
 				if err == io.EOF {
-					continue
+					continue BlockLoop
 				} else if err != nil {
 					st, ok := status.FromError(err)
 					if ok && st.Code() == codes.AlreadyExists {

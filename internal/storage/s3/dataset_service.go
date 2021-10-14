@@ -43,7 +43,9 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 		if strings.HasPrefix(key, "@") {
 			scopes = append(scopes, key)
 		} else {
-			resp.Datasets = append(resp.Datasets, key)
+			resp.Datasets = append(resp.Datasets, &datasetv1.Tag{
+				Name: key,
+			})
 		}
 	}
 
@@ -60,7 +62,9 @@ func (d *datasetService) List(ctx context.Context, request *datasetv1.ListReques
 			key := strings.TrimPrefix(info.Key, "datasets/")
 			key = strings.TrimSuffix(key, "/")
 
-			resp.Datasets = append(resp.Datasets, key)
+			resp.Datasets = append(resp.Datasets, &datasetv1.Tag{
+				Name: key,
+			})
 		}
 	}
 

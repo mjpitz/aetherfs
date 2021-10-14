@@ -7,43 +7,22 @@ Welcome to aetherfs!
 
 Targets:
   help             provides help text
-  dist             recompiles aetherfs binaries
+
   docker           rebuild the aetherfs docker container
   docker/devtools  rebuild docker container containing developer tools
-  gen              regenerate the API code from protocol buffers
+  docker/shell     spins up an interactive shell with all dev tools
+  in-docker        run targets in docker (useful to avoid local deps)
+
   legal            prepends legal header to source code
-  release          releases aetherfs
+  gen              regenerate the API code from protocol buffers
+  dist             recompiles aetherfs binaries
+  release          releases aetherfs (will likely move)
 
 endef
 export HELP_TEXT
 
 help:
 	@echo "$$HELP_TEXT"
-
-legal: .legal
-.legal:
-	addlicense -f ./legal/header.txt -skip yaml -skip yml .
-
-docker/devtools: .docker/devtools
-.docker/devtools:
-	docker build ./docker/devtools -t $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools
-
-gen: .gen
-.gen:
-	@rm -rf api gen
-	docker run --rm -it \
-		-v $(CWD):/home \
-		-w /home \
-		$(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools \
-		sh -c 'buf lint && buf generate'
-
-dist: .dist
-.dist:
-	docker run --rm -it \
-		-v $(CWD):/home \
-		-w /home \
-		$(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools \
-		sh -c "goreleaser --snapshot --skip-publish --rm-dist"
 
 docker: .docker
 .docker:
@@ -52,12 +31,40 @@ docker: .docker
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:$(VERSION) \
 		--file ./docker/aetherfs/Dockerfile
 
-shell:
+docker/devtools: .docker/devtools
+.docker/devtools:
+	docker build ./docker/devtools -t $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools
+
+in-docker:
+	docker run --rm -it \
+		-v $(CWD):/home \
+		-w /home \
+		$(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools \
+		make $(TARGETS)
+
+docker/shell: .docker/shell
+.docker/shell:
 	docker run --rm -it \
 		-v $(CWD):/home \
 		-w /home \
 		$(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools \
 		sh
+
+# actual targets
+
+legal: .legal
+.legal:
+	addlicense -f ./legal/header.txt -skip yaml -skip yml docker internal proto scripts web/public web/src
+
+gen: .gen
+.gen:
+	./scripts/buf.sh
+
+dist: .dist
+.dist:
+	./scripts/dist-web.sh
+	make legal
+	./scripts/dist-go.sh
 
 # release - used to generate core release assets such as binaries and container images.
 
@@ -74,16 +81,3 @@ release:
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:$(VERSION) \
 		--file ./docker/aetherfs/Dockerfile \
 		--push
-
-# proto-tar - invoked from goreleaser to produce a tar.gz of proto files for the version.
-# todo: use bufs image concept
-
-PROTO = $(PWD)/proto
-DIST = $(PWD)/dist
-
-.proto-tar:
-	[[ -d "$(DIST)/aetherfs_proto" ]] || { \
-		mkdir -p $(DIST)/aetherfs_proto; \
-		cp -R $(PROTO)/* $(DIST)/aetherfs_proto; \
-		tar -czf $(DIST)/aetherfs_proto.tar.gz -C $(DIST)/aetherfs_proto/ . ; \
-	}

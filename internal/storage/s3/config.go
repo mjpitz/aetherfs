@@ -4,12 +4,14 @@
 package s3
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/pkg/errors"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
@@ -17,7 +19,7 @@ import (
 )
 
 type Config struct {
-	Endpoint        string               `json:"endpoint"          usage:"location of s3 endpoint"`
+	Endpoint        string               `json:"endpoint"          usage:"location of s3 endpoint" default:"s3.amazonaws.com"`
 	TLS             components.TLSConfig `json:"tls"`
 	AccessKeyID     string               `json:"access_key_id"     usage:"the access key id used to identify the client"`
 	SecretAccessKey string               `json:"secret_access_key" usage:"the secret access key used to authenticate the client"`
@@ -58,6 +60,13 @@ func ObtainStores(cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServe
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	err = s3Client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{})
+	exists, _ := s3Client.BucketExists(ctx, cfg.Bucket)
+	if !exists {
+		return nil, nil, errors.Wrap(err, "bucket does not exist")
 	}
 
 	blockSvc := &blockService{
