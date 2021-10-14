@@ -30,24 +30,19 @@ func (f *FileSystem) openDatasetList(scope string) (http.File, error) {
 		return nil, translateError(err)
 	}
 
-	datasets := listResp.GetDatasets()
-
-	filePath := ""
-	if scope != "" {
-		filePath = scope + "/"
-
-		filteredDatasets := make([]string, 0, len(datasets))
-		for _, dataset := range datasets {
-			if strings.HasPrefix(dataset, filePath) {
-				filteredDatasets = append(filteredDatasets, dataset)
-			}
+	datasets := make([]string, 0)
+	for _, dataset := range listResp.GetDatasets() {
+		if scope == "" || strings.HasPrefix(dataset.GetName(), scope + "/") {
+			datasets = append(datasets, dataset.GetName())
 		}
+	}
 
-		if len(filteredDatasets) == 0 {
+	var filePath string
+	if scope != "" {
+		if len(datasets) == 0 {
 			return nil, os.ErrNotExist
 		}
-
-		datasets = filteredDatasets
+		filePath = scope + "/"
 	}
 
 	return &datasetListNode{

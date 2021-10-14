@@ -147,7 +147,7 @@ Each component of the architecture provides a REST and gRPC interface for commun
 internal components, these interfaces can be used by calling applications as well. However, AetherFS expects callers to
 interact with one of our other interfaces as they abstract away the complexity of the underlying storage.
 
-For the most part, AetherFS's interfaces are inspired by Docker and Git.
+For the most part, AetherFS's interfaces are inspired by Docker and Git. All REST routes sit under the `/api` prefix.
 
 **DatasetAPI**
 
@@ -156,15 +156,11 @@ complete list of files within the dataset, their sizes, and last modified timest
 of blocks that are required to construct the dataset. Using these components, clients can piece together the underlying
 files.
 
-All REST routes sit under the `/v1/datasets` prefix.
-
 **BlockAPI**
 
 The `BlockAPI` gives callers direct access to the block data. You must use the `DatasetAPI` to obtain block references.
 The `BlockAPI` does not provide callers with the ability to list blocks (intentional design decision). An entire block
 can be read at a time, or just part of one.
-
-All REST routes sit under the `/v1/blocks` prefix.
 
 #### HTTP File Server
 
@@ -172,7 +168,7 @@ Using [Golang's http.FileServer][], AetherFS was able to provide a quick prototy
 [HTTP range requests][], callers are able to read segments of large files that may be too large to fit in memory all at
 once. Agents can still make use of caching to keep the data local to the process.
 
-This currently resides under the `/v1/fs` prefix.
+This currently resides under the `/fs` prefix.
 
 [Golang's http.FileServer]: https://pkg.go.dev/net/http#FileServer
 [HTTP range requests]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
@@ -183,7 +179,7 @@ This currently resides under the `/v1/fs` prefix.
 
 #### Web
 
-<!-- todo -->
+A web interface is available under the `/ui` prefix. 
 
 ### Configuration
 

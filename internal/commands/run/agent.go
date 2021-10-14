@@ -84,33 +84,22 @@ func Agent() *cli.Command {
 
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
-			ginServer.Use(
-				components.TranslateHeadersToMetadata(),
-				func(ginctx *gin.Context) {
-					writer := ginctx.Writer
-					request := ginctx.Request
+			ginServer.Use(components.TranslateHeadersToMetadata())
 
-					switch {
-					case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
-						// handle FileServer requests (need to trim prefix)
-						fileSystem := &fs.FileSystem{
-							Context:    ginctx.Request.Context(),
-							BlockAPI:   blockAPI,
-							DatasetAPI: datasetAPI,
-						}
+			ginServer.Group("/api").Any("*path", gin.WrapH(apiServer))
+			ginServer.Group("/fs").GET("*path", func(ginctx *gin.Context) {
+				// handle FileServer requests (need to trim prefix)
+				fileSystem := &fs.FileSystem{
+					Context:    ginctx.Request.Context(),
+					BlockAPI:   blockAPI,
+					DatasetAPI: datasetAPI,
+				}
 
-						handler := http.FileServer(fileSystem)
-						handler = http.StripPrefix("/v1/fs/", handler)
+				handler := http.FileServer(fileSystem)
+				handler = http.StripPrefix("/fs/", handler)
 
-						handler.ServeHTTP(writer, request)
-
-					case strings.HasPrefix(request.URL.Path, "/v1/"):
-						// handle grpc-gateway requests
-						apiServer.ServeHTTP(writer, request)
-
-					}
-				},
-			)
+				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
+			})
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,

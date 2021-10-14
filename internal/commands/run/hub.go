@@ -20,7 +20,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
-	"github.com/mjpitz/aetherfs/internal/web"
+	web2 "github.com/mjpitz/aetherfs/internal/web"
 )
 
 // HubConfig encapsulates the requirements for configuring and starting up the Hub process.
@@ -70,40 +70,25 @@ func Hub() *cli.Command {
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
 
-			// setup a ui handler
-			ui := web.Handle()
-
 			// use gin for all other routes (easier to reason about)
 			ginServer := components.GinServer(ctx.Context)
-			ginServer.Use(
-				components.TranslateHeadersToMetadata(),
-				func(ginctx *gin.Context) {
-					writer := ginctx.Writer
-					request := ginctx.Request
+			ginServer.Use(components.TranslateHeadersToMetadata())
 
-					switch {
-					case strings.HasPrefix(request.URL.Path, "/v1/fs/"):
-						// handle FileServer requests (need to trim prefix)
-						fileSystem := &fs.FileSystem{
-							Context:    ginctx.Request.Context(),
-							BlockAPI:   blockAPI,
-							DatasetAPI: datasetAPI,
-						}
+			ginServer.Group("/api").Any("*path", gin.WrapH(apiServer))
+			ginServer.Group("/fs").GET("*path", func(ginctx *gin.Context) {
+				// handle FileServer requests (need to trim prefix)
+				fileSystem := &fs.FileSystem{
+					Context:    ginctx.Request.Context(),
+					BlockAPI:   blockAPI,
+					DatasetAPI: datasetAPI,
+				}
 
-						handler := http.FileServer(fileSystem)
-						handler = http.StripPrefix("/v1/fs/", handler)
+				handler := http.FileServer(fileSystem)
+				handler = http.StripPrefix("/fs/", handler)
 
-						handler.ServeHTTP(writer, request)
-
-					case strings.HasPrefix(request.URL.Path, "/v1/"):
-						// handle grpc-gateway requests
-						apiServer.ServeHTTP(writer, request)
-
-					case strings.HasPrefix(request.URL.Path, "/ui/"):
-						ui.ServeHTTP(writer, request)
-					}
-				},
-			)
+				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
+			})
+			ginServer.Group("/ui").GET("*path", gin.WrapH(web2.Handle()))
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,

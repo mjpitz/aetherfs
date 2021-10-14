@@ -2,13 +2,15 @@
   "name": "@mjpitz/aetherfs",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --port 8000",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "marked": "^3.0.7",
     "mini.css": "^3.0.1",
+    "node-fetch": "^3.0.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"
   },

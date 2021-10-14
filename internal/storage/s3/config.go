@@ -4,12 +4,14 @@
 package s3
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/pkg/errors"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
@@ -58,6 +60,13 @@ func ObtainStores(cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServe
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	err = s3Client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{})
+	exists, _ := s3Client.BucketExists(ctx, cfg.Bucket)
+	if !exists {
+		return nil, nil, errors.Wrap(err, "bucket does not exist")
 	}
 
 	blockSvc := &blockService{

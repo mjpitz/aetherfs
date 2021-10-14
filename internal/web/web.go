@@ -1,3 +1,6 @@
+// Copyright (C) The AetherFS Authors - All Rights Reserved
+// See LICENSE for more information.
+
 package web
 
 import (

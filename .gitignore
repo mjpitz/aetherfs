@@ -1,9 +1,10 @@
 /api/
 /charts/**/Chart.lock
 /charts/**/*.tgz
-/dist/
 /gen/
 /vendor/
 /docs/openapiv2/
 /out/
-/node_modules/
+
+/dist/
+/internal/web/

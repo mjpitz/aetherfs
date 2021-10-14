@@ -54,7 +54,7 @@ docker/shell: .docker/shell
 
 legal: .legal
 .legal:
-	addlicense -f ./legal/header.txt -skip yaml -skip yml .
+	addlicense -f ./legal/header.txt -skip yaml -skip yml docker internal proto scripts web/public web/src
 
 gen: .gen
 .gen:
@@ -63,6 +63,7 @@ gen: .gen
 dist: .dist
 .dist:
 	./scripts/dist-web.sh
+	make legal
 	./scripts/dist-go.sh
 
 # release - used to generate core release assets such as binaries and container images.
