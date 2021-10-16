@@ -36,4 +36,5 @@ RUN GOBIN=/usr/local/bin go get \
     google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0 \
     github.com/envoyproxy/protoc-gen-validate@v0.6.1 \
     github.com/goreleaser/goreleaser@v0.177.0 \
-    moul.io/protoc-gen-gotemplate@v1.11.2
+    moul.io/protoc-gen-gotemplate@v1.11.2 \
+    github.com/google/addlicense@v1.0.0 \

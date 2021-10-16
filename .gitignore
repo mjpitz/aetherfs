@@ -5,6 +5,7 @@
 /vendor/
 /docs/openapiv2/
 /out/
+naturalearthdata/
 
 /dist/
 /internal/web/

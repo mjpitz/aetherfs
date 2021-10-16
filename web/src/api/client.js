@@ -34,6 +34,10 @@ export default class Client {
     }
 
     ReadFile(dataset, tag, file) {
-        return fetch(`${this._baseUrl}/fs/${dataset}/${tag}/${file}`).then((resp) => resp.text())
+        return fetch(this.FormatFileSystemURL(dataset, tag, file)).then((resp) => resp.text())
+    }
+
+    FormatFileSystemURL(dataset, tag, file) {
+        return `${this._baseUrl}/fs/${dataset}/${tag}/${file}`
     }
 }

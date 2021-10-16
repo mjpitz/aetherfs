@@ -38,8 +38,12 @@ func Setup(ctx context.Context, cfg Config) context.Context {
 		panic(err)
 	}
 
-	grpc_zap.ReplaceGrpcLogger(logger)
-	grpc_zap.ReplaceGrpcLoggerV2(logger)
+	// silence grpc logs for now
+	grpcLogger := logger
+	if level > zapcore.DebugLevel {
+		grpcLogger = zap.NewNop()
+	}
+	grpc_zap.ReplaceGrpcLoggerV2(grpcLogger)
 
 	return ctxzap.ToContext(ctx, logger)
 }

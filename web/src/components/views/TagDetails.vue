@@ -8,13 +8,26 @@
 
   <pre v-if="opened">{{ opened }}</pre>
 
-  <div class="card fluid" v-if="readme">
+  <div class="card fluid" v-if="html">
+    <div class="section double-padded" style="background:white;">
+      <b>README.html</b>
+    </div>
+    <div class="section double-padded" style="background:white;">
+      <iframe width="100%" :src="html"/>
+    </div>
+  </div>
+
+  <div class="card fluid" v-if="markdown">
     <div class="section double-padded" style="background:white;">
       <b>README.md</b>
     </div>
     <div class="section double-padded" style="background:white;">
-      <MarkdownView :markdown="readme"/>
+      <MarkdownView :markdown="markdown"/>
     </div>
+  </div>
+
+  <div>
+
   </div>
 </template>
 
@@ -33,7 +46,8 @@ export default {
     return {
       files: [],
       opened: '',
-      readme: '',
+      markdown: '',
+      html: '',
     }
   },
 
@@ -46,8 +60,8 @@ export default {
         prefix = prefix + "/"
       }
 
-      const readmeFileName = prefix + "README.md"
-      const readmeFile = resp.dataset.files.find((file) => file.name === readmeFileName)
+      const readmeMarkdown = resp.dataset.files.find((file) => file.name === prefix + "README.md")
+      const readmeHTML = resp.dataset.files.find((file) => file.name === prefix + "README.html")
       const openedFile = resp.dataset.files.find((file) => file.name === this.filePath)
 
       if (openedFile) {
@@ -55,11 +69,14 @@ export default {
           this.opened = readme
           this.files = resp.dataset.files
         })
-      } else if (readmeFile) {
-        client.ReadFile(this.datasetFullName, this.version, readmeFile.name).then((readme) => {
-          this.readme = readme
+      } else if (readmeMarkdown) {
+        client.ReadFile(this.datasetFullName, this.version, readmeMarkdown.name).then((markdown) => {
+          this.markdown = markdown
           this.files = resp.dataset.files
         })
+      } else if (readmeHTML) {
+        this.html = client.FormatFileSystemURL(this.datasetFullName, this.version, readmeHTML.name)
+        this.files = resp.dataset.files
       } else {
         this.files = resp.dataset.files
       }
@@ -93,3 +110,27 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+iframe {
+  border: none;
+  min-height: 600px;
+  width: 134%;
+  height: 100%;
+  scroll-margin: 0;
+  scroll-padding: 0;
+
+  -moz-transform: scaleX(0.75) scaleY(0.9);
+  -o-transform: scaleX(0.75) scaleY(0.9);
+  -webkit-transform: scaleX(0.75) scaleY(0.9);
+  -moz-transform-origin: 0;
+  -o-transform-origin: 0;
+  -webkit-transform-origin: 0;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  iframe {
+    zoom: 1;
+  }
+}
+</style>
