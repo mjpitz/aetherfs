@@ -8,6 +8,7 @@
     <div class="row">
       <div class="col-sm-5 col-sm-offset-1">
         <router-link id="brand" class="secondary button" to="/">AetherFS</router-link>
+        <a class="button" :href="`${baseUrl}swagger/`">Swagger</a>
       </div>
       <div class="col-sm-5" style="text-align: right;">
 <!--        <router-link class="button" to="/">Log In</router-link>-->
@@ -22,14 +23,23 @@
   </div>
 </template>
 
-<style>
-@import "~mini.css/dist/mini-default.min.css";
+<script>
+export default {
+  data() {
+    return {
+      baseUrl: "",
+    }
+  },
 
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  mounted() {
+    this.baseUrl = process.env.BASE_URL
+  }
 }
+</script>
+
+<style scoped>
+@import "~normalize.css/normalize.css";
+@import "~mini.css/dist/mini-default.min.css";
 
 #brand {
   font-weight: bold;

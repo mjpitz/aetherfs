@@ -18,7 +18,7 @@ plugins:
       - generate_unbound_methods=true
 
   - name: openapiv2
-    out: docs/openapiv2
+    out: web/public/swagger
 
     # NOTE: I currently do not need the block of configuration below, but should someone
 #

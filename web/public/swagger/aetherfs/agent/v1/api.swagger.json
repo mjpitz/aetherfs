@@ -1,0 +1,166 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "aetherfs/agent/v1/api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AgentAPI"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/agent/publish": {
+      "post": {
+        "operationId": "AgentAPI_Publish",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PublishResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PublishRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AgentAPI"
+        ]
+      }
+    },
+    "/api/v1/agent/shutdown": {
+      "post": {
+        "operationId": "AgentAPI_GracefulShutdown",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GracefulShutdownResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GracefulShutdownRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AgentAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GracefulShutdownRequest": {
+      "type": "object",
+      "description": "GracefulShutdownRequest is used to initiate a graceful shutdown of the agent process. This will wait for all\npublished datasets to be replicated before shutting down."
+    },
+    "v1GracefulShutdownResponse": {
+      "type": "object"
+    },
+    "v1PublishRequest": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Tag"
+          }
+        }
+      },
+      "description": "PublishRequest instructs the agent to publish the dataset found at the provided path with the associated tags."
+    },
+    "v1PublishResponse": {
+      "type": "object",
+      "title": "PublishResponse"
+    },
+    "v1SubscribeResponse": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "$ref": "#/definitions/v1Tag"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "title": "SubscribeResponse"
+    },
+    "v1Tag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "description": "Tag identifies a version of a dataset in AetherFS."
+    }
+  }
+}

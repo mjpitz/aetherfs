@@ -1,0 +1,316 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "aetherfs/dataset/v1/api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "DatasetAPI"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/datasets": {
+      "get": {
+        "operationId": "DatasetAPI_List",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "DatasetAPI"
+        ]
+      },
+      "post": {
+        "operationId": "DatasetAPI_Publish",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PublishResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PublishRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DatasetAPI"
+        ]
+      }
+    },
+    "/api/v1/datasets/{name}/tags": {
+      "get": {
+        "operationId": "DatasetAPI_ListTags",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListTagsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "DatasetAPI"
+        ]
+      }
+    },
+    "/api/v1/datasets/{tag.name}/tags/{tag.version}": {
+      "get": {
+        "operationId": "DatasetAPI_Lookup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LookupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tag.name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tag.version",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DatasetAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Dataset": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1File"
+          }
+        },
+        "blockSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Dataset describes a collection of data that is spread across multiple files. Files in\na dataset are broken into blocks to make caching and sharing parts easier."
+    },
+    "v1File": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lastModified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "File describes a filesystem file that is replicated using AetherFS."
+    },
+    "v1ListResponse": {
+      "type": "object",
+      "properties": {
+        "nextPageToken": {
+          "type": "string"
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Tag"
+          }
+        }
+      }
+    },
+    "v1ListTagsResponse": {
+      "type": "object",
+      "properties": {
+        "nextPageToken": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Tag"
+          }
+        }
+      }
+    },
+    "v1LookupResponse": {
+      "type": "object",
+      "properties": {
+        "dataset": {
+          "$ref": "#/definitions/v1Dataset"
+        }
+      }
+    },
+    "v1PublishRequest": {
+      "type": "object",
+      "properties": {
+        "dataset": {
+          "$ref": "#/definitions/v1Dataset"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Tag"
+          }
+        }
+      },
+      "description": "PublishRequest updates all provided tags to use the new version of dataset."
+    },
+    "v1PublishResponse": {
+      "type": "object",
+      "title": "PublishResponse"
+    },
+    "v1SubscribeResponse": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "$ref": "#/definitions/v1Tag"
+        },
+        "dataset": {
+          "$ref": "#/definitions/v1Dataset"
+        }
+      },
+      "description": "SubscribeResponse is returned any time a new version of a dataset becomes available."
+    },
+    "v1Tag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "description": "Tag identifies a version of a dataset in AetherFS."
+    }
+  }
+}

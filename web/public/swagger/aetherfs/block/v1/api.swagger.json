@@ -1,0 +1,168 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "aetherfs/block/v1/api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "BlockAPI"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/blocks": {
+      "post": {
+        "operationId": "BlockAPI_Upload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": " (streaming inputs)",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UploadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BlockAPI"
+        ]
+      }
+    },
+    "/api/v1/blocks/{signature}": {
+      "get": {
+        "operationId": "BlockAPI_Download",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/v1DownloadResponse"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of v1DownloadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "signature",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BlockAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1DownloadResponse": {
+      "type": "object",
+      "properties": {
+        "part": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1LookupResponse": {
+      "type": "object"
+    },
+    "v1UploadRequest": {
+      "type": "object",
+      "properties": {
+        "part": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "UploadRequest streams parts of a semi-large file to the server during an upload."
+    },
+    "v1UploadResponse": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
