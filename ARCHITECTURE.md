@@ -119,23 +119,18 @@ datasets.
 
 ## Implementation
 
-<div>
-    <a href="docs/assets/seen-stored-cached.png">
-        <img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
-    </a>
-    <p>
-        When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single
-        contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer.
-        For example, Amazon Athena documentation suggests using S3 objects between 256MiB and 1GiB to optimize network
-        bandwidth. <!-- needs citation -->
-    </p>
-    <p>
-        Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While
-        producers have control over the size of the blocks that are stored in AetherFS, they do not control the size of
-        the cacheable parts. This allows consumers of datasets to tune their usage based by adding more memory or disk
-        where they need to.
-    </p>
-</div>
+<a href="docs/assets/seen-stored-cached.png">
+<img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
+</a>
+
+When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single 
+contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer. For 
+example, Amazon Athena documentation suggests using S3 objects between 256MiB and 1GiB to optimize network bandwidth.
+<!-- needs citation -->
+
+Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While producers 
+have control over the size of the blocks that are stored in AetherFS, they do not control the size of the cacheable 
+parts. This allows consumers of datasets to tune their usage based by adding more memory or disk where they need to.
 
 ### Components
 
