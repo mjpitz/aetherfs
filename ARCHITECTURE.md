@@ -119,7 +119,23 @@ datasets.
 
 ## Implementation
 
-<!-- todo: add some pretext here -->
+<div>
+    <a href="docs/assets/seen-stored-cached.png">
+        <img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
+    </a>
+    <p>
+        When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single
+        contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer.
+        For example, Amazon Athena documentation suggests using S3 objects between 256MiB and 1GiB to optimize network
+        bandwidth. <!-- needs citation -->
+    </p>
+    <p>
+        Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While
+        producers have control over the size of the blocks that are stored in AetherFS, they do not control the size of
+        the cacheable parts. This allows consumers of datasets to tune their usage based by adding more memory or disk
+        where they need to.
+    </p>
+</div>
 
 ### Components
 
@@ -138,6 +154,13 @@ authenticated clients have access to the desired dataset.
 The AetherFS agent is an optional sidecar process. It provides an application level cache for block data and can also
 manage a local file system path (if enabled). It provides a special `AgentAPI` that can publish datasets 
 programmatically.
+
+_Not yet implemented._
+
+#### AetherFS CLI
+
+End users can interact with a command line interface (CLI) to push and pull datasets from AetherFS hubs. It's the
+primary point of interaction for operators and engineers.
 
 ### Interfaces
 
@@ -175,11 +198,13 @@ This currently resides under the `/fs` prefix.
 
 #### FUSE File System
 
-<!-- todo, linux only feature (until OSX Fuse works again) -->
-
+_Not yet implemented._
+ 
 #### Web
 
-A web interface is available under the `/ui` prefix. 
+A web interface is available under the `/ui` prefix. It allows you to explore datasets, their tags, and even files
+within the dataset from a graphical interface. If you include a `README.md` file in the root of your dataset, we're
+able to render inline in the browser.
 
 ### Configuration
 
