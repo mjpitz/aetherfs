@@ -21,19 +21,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Lint Golang
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.39
-          only-new-issues: false
-          skip-go-installation: true
-
-      - name: Lint NodeJS
-        run: |
-          cd web
-          npm install
-          npm run lint
-          cd ..
+#      - name: Lint Golang
+#        uses: golangci/golangci-lint-action@v2
+#        with:
+#          version: v1.39
+#          only-new-issues: false
+#          skip-go-installation: true
+#
+#      - name: Lint NodeJS
+#        run: |
+#          cd web
+#          npm install
+#          npm run lint
+#          cd ..
 
       - name: Test
         run: make test
