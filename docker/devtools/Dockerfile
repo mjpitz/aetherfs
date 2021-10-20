@@ -26,7 +26,7 @@ ENV PATH="/usr/local/go/bin:/usr/local/protoc/bin:/usr/local/node/bin:${PATH}"
 
 ENV GO111MODULE=on
 
-RUN GOBIN=/usr/local/bin go install \
+RUN GOBIN=/usr/local/bin go get \
     github.com/bufbuild/buf/cmd/buf@v0.54.1 \
     github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@v0.54.1 \
     github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@v0.54.1 \
