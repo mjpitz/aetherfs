@@ -51,8 +51,24 @@ func ObtainStores(cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServe
 		}
 	}
 
+	// support common AWS and MinIO environment variables
+	providers := []credentials.Provider{
+		&credentials.EnvAWS{},
+		&credentials.EnvMinio{},
+	}
+
+	if cfg.AccessKeyID != "" && cfg.SecretAccessKey != "" {
+		providers = append(providers, &credentials.Static{
+			Value: credentials.Value{
+				AccessKeyID:     cfg.AccessKeyID,
+				SecretAccessKey: cfg.SecretAccessKey,
+				SignerType:      credentials.SignatureV4,
+			},
+		})
+	}
+
 	s3Client, err := minio.New(cfg.Endpoint, &minio.Options{
-		Creds:     credentials.NewStaticV4(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
+		Creds:     credentials.NewChainCredentials(providers),
 		Secure:    tls != nil,
 		Transport: rt,
 		Region:    cfg.Region,
