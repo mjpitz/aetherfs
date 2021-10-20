@@ -124,8 +124,10 @@ datasets.
 <img src="https://aetherfs.tech/assets/overview.png" align="right" width="40%"/>
 </a>
 
-AaetherFS deploys as a simple client-server architecture, with a few caveats. It's distributed as a single binary making
-the full suite of components accessible to users.
+AaetherFS deploys as a simple client-server architecture, with a few caveats.
+
+We distribute everything as part of a single binary, making it easy for anyone to get hands on with each component. The
+AetherFS Hub process is the only component that's required, but leveraging others can yield a better experience.
 
 ### Components
 
