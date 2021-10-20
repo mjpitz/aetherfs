@@ -1,0 +1,51 @@
+apiVersion: v1
+entries:
+  aetherfs:
+  - apiVersion: v2
+    appVersion: 21.10.0
+    created: "2021-10-20T18:14:20.869529-05:00"
+    dependencies:
+    - condition: aetherfs-hub.enabled
+      name: aetherfs-hub
+      repository: file://../aetherfs-hub/
+      version: 21.10.0
+    - condition: dex.enabled
+      name: dex
+      repository: https://charts.dexidp.io
+      version: 0.5.0
+    - condition: minio.enabled
+      name: minio
+      repository: https://helm.min.io/
+      version: 8.0.9
+    description: A virtual file system for small to medium sized datasets (MB or GB,
+      not TB or PB).
+    digest: 917ab5a5575c0b898bb54738a51827258b2a9b84c7824119eae7347272a03140
+    home: https://aetherfs.tech
+    maintainers:
+    - email: j.mya.pitz@gmail.com
+      name: Mya Pitzeruse
+    name: aetherfs
+    sources:
+    - https://github.com/mjpitz/aetherfs
+    type: application
+    urls:
+    - https://github.com/mjpitz/aetherfs/releases/download/v21.10.0/aetherfs-21.10.0.tgz
+    version: 21.10.0
+  aetherfs-hub:
+  - apiVersion: v2
+    appVersion: 21.10.0
+    created: "2021-10-20T18:14:20.948301-05:00"
+    description: Run and manage your own AetherFS data hub.
+    digest: c2b403c81976b3e7bc1c515bea286d8eca1bd48225038bd0de6ab814771f85d4
+    home: https://aetherfs.tech
+    maintainers:
+    - email: j.mya.pitz@gmail.com
+      name: Mya Pitzeruse
+    name: aetherfs-hub
+    sources:
+    - https://github.com/mjpitz/aetherfs
+    type: application
+    urls:
+    - https://github.com/mjpitz/aetherfs/releases/download/v21.10.0/aetherfs-hub-21.10.0.tgz
+    version: 21.10.0
+generated: "2021-10-20T18:14:20.948306-05:00"
