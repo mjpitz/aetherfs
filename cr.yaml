@@ -1,0 +1,5 @@
+charts-repo: https://aetherfs.tech/charts/
+owner: mjpitz
+git-repo: aetherfs
+release-name-template: "v{{ .Version }}"
+pages-branch: "main"

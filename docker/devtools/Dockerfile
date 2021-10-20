@@ -38,4 +38,4 @@ RUN GOBIN=/usr/local/bin go get \
     moul.io/protoc-gen-gotemplate@v1.11.2 \
     github.com/google/addlicense@v1.0.0 \
     github.com/goreleaser/goreleaser@v0.177.0 \
-    github.com/golangci/golangci-lint@v1.42.1 \
+    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 \

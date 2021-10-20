@@ -1,3 +1,7 @@
+# env needed for release:
+#  - VERSION
+#  - GITHUB_TOKEN
+
 project_name: aetherfs
 
 snapshot:
@@ -28,3 +32,7 @@ checksum:
   name_template: 'aetherfs_checksums.txt'
   extra_files:
     - glob: "**/aetherfs_proto.tar.gz"
+
+release:
+  header: ""
+  footer: ""
