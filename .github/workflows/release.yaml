@@ -37,7 +37,7 @@ jobs:
 
       - name: Distribute Container Image
         run: |
-          VERSION=${GITHUB_REF##*/v} make release/docker
+          VERSION=${GITHUB_REF##*/v} make docker/release
 
   chart:
     name: Publish Chart
