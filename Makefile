@@ -38,7 +38,7 @@ docker/devtools: .docker/devtools
 	docker build ./docker/devtools -t $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools
 
 in-docker:
-	docker run --rm -it \
+	docker run --rm -i \
 		-e VERSION \
 		-e GITHUB_TOKEN \
 		-v $(CWD):/home \
