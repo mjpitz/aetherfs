@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+//nolint:typecheck
 //go:embed dist/*
 var assets embed.FS
 

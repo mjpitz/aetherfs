@@ -1,3 +1,6 @@
+.cr-release-packages/
+.cr-index/
+
 /charts/**/Chart.lock
 /charts/**/*.tgz
 /gen/
