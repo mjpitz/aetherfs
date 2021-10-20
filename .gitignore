@@ -10,3 +10,4 @@ naturalearthdata/
 
 /dist/
 /internal/web/
+package-lock.json
