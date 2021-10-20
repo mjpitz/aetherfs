@@ -30,6 +30,8 @@ jobs:
           REGISTRY_PASSWORD: ${{ secrets.GHCR_REGISTRY_PUSH_PASSWORD }}
 
       - name: Distribute Binaries
+        env:
+          GITHUB_TOKEN: "${{ secrets.GH_PUSH_TOKEN }}"
         run: |
           VERSION=${GITHUB_REF##*/v} make in-docker TARGETS="dist"
 
@@ -131,6 +133,5 @@ jobs:
           git add docs/index.yaml
           git commit -m "release: charts"
           git push
-
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_TOKEN: "${{ secrets.GH_PUSH_TOKEN }}"
