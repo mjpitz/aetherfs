@@ -36,7 +36,7 @@ resilient artifact distribution).
 
 Sometime after Indeed developed RAD internally, we saw a similar system open sourced from [Netflix][] called [Hollow][].
 Hollow is a Java library used to distribute in-memory datasets. Unlike RAD's file-system based approach, Hollow stored 
-everything in S3. While I have not used Hollow myself, I see the utility it provides to Java ecosystem.
+everything in S3. While I have not used Hollow myself, I see the utility it provides to the Java ecosystem.
 
 [Indeed]: https://www.indeed.com
 [RAD]: https://www.youtube.com/watch?v=lDXdf5q8Yw8
@@ -45,9 +45,10 @@ everything in S3. While I have not used Hollow myself, I see the utility it prov
 
 ### Motivation
 
-Since leaving Indeed, I've often thought about what a modern take on this technology might look like. In addition to
-this curiosity, I've found myself wanting a similar solution that can be used on edge or IoT devices where storage may
-be limited or non-existent.
+As I've run more workloads on my Raspberry Pis, I've found myself wanting a different type of file system. Since my pis
+don't have a lot of disk capacity, I want to be able to distribute parts of my total data across the cluster. In 
+addition to that, I want to deduplicate blocks of data that might repeat between versions of that to help keep the
+footprint low.
 
 ### Concepts
 
