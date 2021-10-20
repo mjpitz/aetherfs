@@ -7,4 +7,9 @@ set -e -o pipefail
 go mod download
 go mod verify
 
-goreleaser --snapshot --skip-publish --rm-dist
+if [[ -z "${VERSION}" ]]; then
+  goreleaser --snapshot --skip-publish --rm-dist
+else
+  goreleaser
+fi
+
