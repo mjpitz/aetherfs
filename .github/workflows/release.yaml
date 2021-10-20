@@ -87,7 +87,6 @@ jobs:
           yq e ".appVersion = ${VERSION}" -i ./charts/aetherfs-hub/Chart.yaml
           yq e ".version = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
           yq e ".appVersion = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
-          yq e "(.dependencies | select(.name=\"aetherfs-hub\")).version = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
 
       # TODO: Setup GPG signing
       # - name: Prepare GPG key
