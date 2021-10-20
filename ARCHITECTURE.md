@@ -99,6 +99,8 @@ datasets.
   - Provide numerous interfaces to manage and access information in the system.
   - Built in developer tools to help producers understand the performance of their datasets.
 
+[AWS S3]: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html
+
 ## Implementation
 
 <a href="docs/assets/seen-stored-cached.png">
@@ -202,12 +204,16 @@ $ aetherfs run agent -h
 
 ### Interfaces
 
-#### REST & gRPC
+This project exposes numerous interfaces for interaction. Why? For the most part, everyone has their own preference. In
+this case, a lot of it is offered out of convenience. For example, instead of implementing a `FileAPI`, I implemented a
+[file server](#http-file-server) instead. Beyond the initial HTTP File System, this core set of logic can be reused to
+write the FUSE interface later on.
 
-Each component of the architecture provides a REST and gRPC interface for communication. While primarily used by
-internal components, these interfaces can be used by calling applications as well. However, AetherFS expects callers to
-interact with one of our other interfaces as they abstract away the complexity of the underlying storage. For reference,
-see how our [Web UI](#web) is written against the various APIs. 
+#### gRPC
+
+gRPC is the primary form of communication between processes. While it has some sharp edges, supporting communication
+through an HTTP ingress is a requirement for end users to be able to download data. gRPC provides a convenient way to
+write stream based APIs which are critical to large datasets. AetherFS uses gRPC to communicate between components.  
 
 **DatasetAPI**
 
@@ -221,6 +227,14 @@ files.
 The `BlockAPI` gives callers direct access to the block data. You must use the `DatasetAPI` to obtain block references.
 The `BlockAPI` does not provide callers with the ability to list blocks (intentional design decision). An entire block
 can be read at a time, or just part of one.
+
+#### REST
+
+AetherFS provides a REST interface via grpc-gateway. It's offered primarily for end users to interact with if no gRPC
+client has been generated or gRPC is unavailable. For example, the web interface is built against the REST interface 
+since gRPC isn't* available in browsers. Because our API contains streaming calls, support over REST is difficult to do.
+
+All REST endpoints are under the `/api` prefix.
 
 #### HTTP File Server
 
@@ -262,11 +276,94 @@ example, Amazon Athena documentation suggests using S3 objects between 256MiB an
 
 Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While producers 
 have control over the size of the blocks that are stored in AetherFS, they do not control the size of the cacheable 
-parts. This allows consumers of datasets to tune their usage based by adding more memory or disk where they need to.
+parts. This allows consumers of datasets to tune their usage based by adding more memory, disk, or peers where they need
+to. To help explain this a little more, let us consider the following example manifest.
+
+```json
+{
+    "dataset": {
+        "files": [{
+            "name": "HYP_HR_SR_W_DR.VERSION.txt",
+            "size": "5",
+            "lastModified": "2012-11-08T06:34:01Z"
+        }, {
+            "name": "HYP_HR_SR_W_DR.prj",
+            "size": "147",
+            "lastModified": "2012-09-19T13:56:32Z"
+        }, {
+            "name": "HYP_HR_SR_W_DR.tfw",
+            "size": "173",
+            "lastModified": "2009-12-22T20:48:30Z"
+        }, {
+            "name": "HYP_HR_SR_W_DR.tif",
+            "size": "699969826",
+            "lastModified": "2012-07-16T16:23:30Z"
+        }, {
+            "name": "README.html",
+            "size": "30763",
+            "lastModified": "2012-11-08T06:34:01Z"
+        }],
+        "blockSize": 268435456,
+        "blocks": [
+            "43fbwtgpsbh6naab7cevphlcxvp6xi3etkwataxtvxgkltcpky4q====",
+            "feufuim3ogmo34aqv5htwkww4ovll5weurt3nc6p233irbjlwjwq====",
+            "7egqp74hvvfdau5vy6tyynvzs6mlxoikit5bc4fdxeiuwwclcd4q===="
+        ]
+    }
+}
+```
+
+This manifest is based on [BitTorrent][] and the modifications Indeed need to make to support RAD. While not immediately
+obvious, it contains all the information needed to reconstruct the original file system AetherFS took a snapshot of.
+For example, the snippet of pseudocode below can be used to identify which blocks need to be read in order to
+reconstruct a specific file. 
+
+[BitTorrent]: https://en.wikipedia.org/wiki/BitTorrent
+
+```
+offset = 0
+size = 0
+for file in files {
+    if file.name == desiredFile {
+        size = file.size
+        break;
+    }
+    offset = offset + sile.size
+}
+
+block = blocks[offset / blockSize]
+blockOffset = offset % blockSize
+
+// read block starting at blockOffset for size
+// note size > blockSize ;-)
+```
+
+Keep in mind, that blocks can contain many files, and a single file can require many blocks. This is an important detail
+when reconstructing data.
 
 #### Persistence
 
-<!-- todo -->
+AetherFS persists data in an S3 compatible solution. Internally, it uses the MinIO Golang client to communicate with the
+S3 API. We support reading common AWS environment variables, MinIO environment variables, or through command line
+options. Similar to Git's object store and Dockers blob store, the AetherFS block store persists blocks in a directory
+prefixed by the first two letters of the signature. Meanwhile, datasets are in a separate key space that allows hubs to
+list datasets, and their tags without the need for a metadata file (i.e. through prefix scans.) For example:
+
+```
+blocks/{sha[:2]}/{sha[2:]}
+blocks/1e/0d0f7ab123836cd69efb28cc62908c03002a11
+blocks/1e/67d8b5474d6141c12da7798e494681e3d87440
+blocks/1e/d939b2a6636c5a6085d0e885df0ac997c0d0a7
+blocks/1e/fc7af3a2e5dfdd23163bd9e8c5b97059f56a37
+
+datasets/{name}/{tag}
+datasets/test/v21.10
+datasets/test/latest
+```
+
+Since we store this information separately, implementing expiration and cleaning up older blocks is relatively easy to 
+implement. Some datasets, like Maxmind, have terms of use that say new versions need to be replaced in a timely manner
+and older copies are deleted upon request.
 
 #### Caching
 
@@ -274,7 +371,12 @@ _Not yet implemented._
 
 ### Security & Privacy
 
-<!-- todo: add some pretext -->
+This is an initial release. We'll add more on this later. Generally speaking, I like to take a reasonable approach
+toward security. To me, that means that we ship security features as we need them instead of trying to force them in
+right out the gate. That being said, while our initial release has no intent on supporting authentication, we're looking
+at including it in our second.
+
+So stay tuned until then... or not. I'm sure you know how these things work... 
 
 #### Authentication
 
@@ -293,24 +395,3 @@ encryption support (assuming interest).
 #### Encryption in Transit
 
 Where possible, our systems leverage TLS certificates to encrypt communication between processes.
-
-<!--
-**BitTorrent**
-
-Indeed's RAD ecosystem used the [BitTorrent][] protocol to replicate information around the world. This was done to
-reduce the data load on the producer machine. However, for Indeed to leverage BitTorrent, they needed to modify the
-torrent manifest to propagate the last modified times for a file. This adds a maintenance burden since we would then
-need to maintain a [fork][]. Similarly, the academic community has latched onto this at [Florida State University][]
-where they use BitTorrent to share large datasets between researchers.
-
-While AetherFS does not use BitTorrent, we do lift some concepts from the protocol. For example, our dataset manifest
-uses a similar structure to a BitTorrent manifest since we deal with similar structures. Similar to BitTorrent, AetherFS
-chunks the data into blocks, optimized for storage in [AWS S3][] (or equivalent). When read from S3, we break blocks
-down into smaller, cache optimized blocks. For better performance, we can tier the sizes of our caching layers. This
-will be explained more in depth later on.
-
-[Florida State University]: https://web.archive.org/web/20130402200554/https://www.hpc.fsu.edu/index.php?option=com_wrapper&view=wrapper&Itemid=80
-[BitTorrent]: https://en.wikipedia.org/wiki/BitTorrent
-[fork]: https://github.com/indeedeng/ttorrent
-[AWS S3]: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html
--->
