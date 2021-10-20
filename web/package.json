@@ -1,5 +1,5 @@
 {
-  "name": "@mjpitz/aetherfs",
+  "name": "@mjpitz/aetherfs-web",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --port 8000",

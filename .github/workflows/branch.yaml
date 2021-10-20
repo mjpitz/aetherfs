@@ -19,11 +19,11 @@ jobs:
         run: |
           make in-docker TARGETS="lint"
 
-      - name: Test
-        run: make in-docker TARGETS="test"
-
       - name: Distribute
         run: make in-docker TARGETS="dist"
+
+      - name: Test
+        run: make in-docker TARGETS="test"
 
   chart:
     name: Lint and Test Chart
