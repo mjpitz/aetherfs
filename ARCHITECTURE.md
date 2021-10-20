@@ -104,7 +104,7 @@ datasets.
 
 ## Implementation
 
-<a href="docs/assets/seen-stored-cached.png">
+<a href="docs/assets/overview.png">
 <img src="https://aetherfs.tech/assets/overview.png" align="right" width="40%"/>
 </a>
 
