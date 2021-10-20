@@ -7,9 +7,9 @@
   * [Requirements](#requirements)
 * [Implementation](#implementation)
   * [Components](#components)
+    * [AetherFS CLI](#aetherfs-cli)
     * [AetherFS Hub](#aetherfs-hub)
     * [AetherFS Agent](#aetherfs-agent)
-    * [AetherFS CLI](#aetherfs-cli)
   * [Interfaces](#interfaces)
     * [REST & gRPC](#rest--grpc)
     * [HTTP File Server](#http-file-server)
@@ -57,46 +57,27 @@ At Indeed, we referred to these as "artifacts," but I often found the term to be
 AetherFS, we refer to collections of information as a _dataset_. Datasets can be tagged, similar to containers. This
 allows publishers to manage their own history and channels for consumers.
 
-For example, you might maintain a `stable` tag that contains the latest stable version of the dataset. To help insulate
-consumers, you might also manage a `next` tag that contains the next version of the dataset. This allows consumers to
-follow the `stable` tag in production, and the `next` tag in development.
+_**NOTE:** In theory, this system could be used as a generalized package manager, in which the term "artifact" would be
+appropriate. However, that is not my intent for this project._
 
-You can also follow your standard [semantic][] or [calendar][] versioning tags to maintain a history of all versions of the
-dataset. This is particularly useful should you need to rollback a change to a dataset.
+**Tag**
+
+A Tag in AetherFS is a pointer to a set of blocks that make up the associated dataset. They can be used to mark concrete
+versions of a dataset (like a [semantic][] or [calendar][] version) or a floating pointer (like `stable` or `next`).
+Using a floating pointer allows consumers to stay up to date on the latest version of the dataset without requiring
+redeploy.
 
 [semantic]: https://semver.org/
 [calendar]: https://calver.org/
 
-_**NOTE:** In theory, this system could be used as a generalized package manager, in which the term "artifact" would be
-appropriate. However, that is not my intent for this project._
-
 **Blocks**
 
-When clients push a dataset into AetherFS, its contents are broken up into fixed sized _blocks_. This allows smaller
-files to be stored as a single block and larger ones to be broken up into multiple smaller ones. In the end, their goal
-is to reduce the amount of data between versions and reduce the number of calls made to the backend.
+When a publisher pushes a dataset into AetherFS, its contents are broken up into fixed sized _blocks_. This allows
+smaller files to be stored as a single block and larger ones to be broken up into multiple smaller ones. In the end,
+their goal is to reduce the amount of data between versions and reduce the number of calls made to the backend.
 
-Blocks are immutable, which allows them to be cached amongst your agents. This allows hot data to be read from your
-peers instead of making a call to your underlying storage tier.
-
-**BitTorrent**
-
-Indeed's RAD ecosystem used the [BitTorrent][] protocol to replicate information around the world. This was done to
-reduce the data load on the producer machine. However, for Indeed to leverage BitTorrent, they needed to modify the
-torrent manifest to propagate the last modified times for a file. This adds a maintenance burden since we would then
-need to maintain a [fork][]. Similarly, the academic community has latched onto this at [Florida State University][]
-where they use BitTorrent to share large datasets between researchers.
-
-While AetherFS does not use BitTorrent, we do lift some concepts from the protocol. For example, our dataset manifest
-uses a similar structure to a BitTorrent manifest since we deal with similar structures. Similar to BitTorrent, AetherFS
-chunks the data into blocks, optimized for storage in [AWS S3][] (or equivalent). When read from S3, we break blocks
-down into smaller, cache optimized blocks. For better performance, we can tier the sizes of our caching layers. This
-will be explained more in depth later on.
-
-[Florida State University]: https://web.archive.org/web/20130402200554/https://www.hpc.fsu.edu/index.php?option=com_wrapper&view=wrapper&Itemid=80
-[BitTorrent]: https://en.wikipedia.org/wiki/BitTorrent
-[fork]: https://github.com/indeedeng/ttorrent
-[AWS S3]: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html
+Blocks are immutable, which allows them to be cached amongst agents in your clusters. This allows hot data to be read
+from your peers instead of making a call to your underlying storage tier.
 
 **Signature**
 
@@ -126,22 +107,60 @@ datasets.
 
 AaetherFS deploys as a simple client-server architecture, with a few caveats.
 
-We distribute everything as part of a single binary, making it easy for anyone to get hands on with each component. The
-AetherFS Hub process is the only component that's required, but leveraging others can yield a better experience.
+The AetherFS Agent process can cluster into a mesh of nodes, allowing it to share data amongst its peers. This allows
+agents to reduce calls to the database by re-using blocks of data that are likely already within the cluster.
 
 ### Components
+
+While there are a few moving components to AetherFS, we distribute everything as part of a single binary. 
+
+#### AetherFS CLI
+
+![role: client](https://img.shields.io/badge/role-client-white?style=for-the-badge)
+![interfaces: command line, fuse](https://img.shields.io/badge/interfaces-command%20line,%20fuse-white?style=for-the-badge)
+
+The command line interface (CLI) is the primary mechanism for interacting with datasets stored in AetherFS. Operators
+use it to run the various infrastructure components and engineers use it to download datasets on demand. It can even be 
+run as an init container to initialize a file system for a Kubernetes Pod.
+
+```
+$ aetherfs -h
+
+NAME:
+   aetherfs - A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).
+
+USAGE:
+   aetherfs [options] <command>
+
+COMMANDS:
+   pull     Pulls a dataset from AetherFS
+   push     Pushes a dataset into AetherFS
+   run      Run the various AetherFS processes
+   version  Print the binary version information
+
+GLOBAL OPTIONS:
+   --log_level value   adjust the verbosity of the logs (default: "info") [$LOG_LEVEL]
+   --log_format value  configure the format of the logs (default: "json") [$LOG_FORMAT]
+   --help, -h          show help (default: false)
+
+COPYRIGHT:
+   Copyright 2021 The AetherFS Authors - All Rights Reserved
+
+```
 
 #### AetherFS Hub
 
 ![role: server](https://img.shields.io/badge/role-server-white?style=for-the-badge)
 ![interfaces: grpc, file server, rest, web](https://img.shields.io/badge/interfaces-grpc,%20file%20server,%20rest,%20web-white?style=for-the-badge)
 
-The AetherFS Hub is the primary component in AetherFS. It provides the core interfaces that are leverage by all other
-components in AetherFS. The hub is responsible for managing the underlying storage tier and verifying the
-authenticated clients have access to the desired dataset.
+AetherFS hubs host datasets for download. They're horizontally scalable making it easy to scale up when additional CPU
+or memory is needed. Hubs are responsible for managing the underlying storage tier (S3) and verifying authenticated
+clients have access to datasets. AetherFS itself does not implement an identity provider, but will eventually work with
+[dex](https://dexidp.io) or other OIDC providers.
 
 ```
 $ aetherfs run hub -h
+
 NAME:
    aetherfs run hub - Runs the AetherFS Hub process
 
@@ -170,48 +189,15 @@ OPTIONS:
 ![role: client, server](https://img.shields.io/badge/role-client,%20server-white?style=for-the-badge)
 ![interfaces: grpc, file server, fuse, rest](https://img.shields.io/badge/interfaces-grpc,%20file%20server,%20fuse,%20rest-white?style=for-the-badge)
 
-The AetherFS agent is an optional sidecar process. It provides an application level cache for block data and can also
-manage a local file system path (if enabled). It provides a special `AgentAPI` that can publish datasets 
-programmatically.
+AetherFS agents support a variety of use cases. At the end of the day, it's goal is to serve information from AetherFS
+as quickly as possible through a variety of mechanisms. In addition to the File Server and FUSE interfaces, it can
+manage a local file system. This allows applications to interact with files on disk just as if they were packaged
+locally.
 
 _Not yet implemented._
 
 ```
 $ aetherfs run agent -h
-```
-
-#### AetherFS CLI
-
-![role: client](https://img.shields.io/badge/role-client-white?style=for-the-badge)
-![interfaces: command line, fuse](https://img.shields.io/badge/interfaces-command%20line,%20fuse-white?style=for-the-badge)
-
-End users can interact with a command line interface (CLI) to push and pull datasets from AetherFS hubs. It's the
-primary point of interaction for operators and engineers. It also contains the necessary code to run and operate your
-own hub and agent processes.
-
-```
-$ aetherfs -h
-
-NAME:
-   aetherfs - A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).
-
-USAGE:
-   aetherfs [options] <command>
-
-COMMANDS:
-   pull     Pulls a dataset from AetherFS
-   push     Pushes a dataset into AetherFS
-   run      Run the various AetherFS processes
-   version  Print the binary version information
-
-GLOBAL OPTIONS:
-   --log_level value   adjust the verbosity of the logs (default: "info") [$LOG_LEVEL]
-   --log_format value  configure the format of the logs (default: "json") [$LOG_FORMAT]
-   --help, -h          show help (default: false)
-
-COPYRIGHT:
-   Copyright 2021 The AetherFS Authors - All Rights Reserved
-
 ```
 
 ### Interfaces
@@ -220,9 +206,8 @@ COPYRIGHT:
 
 Each component of the architecture provides a REST and gRPC interface for communication. While primarily used by
 internal components, these interfaces can be used by calling applications as well. However, AetherFS expects callers to
-interact with one of our other interfaces as they abstract away the complexity of the underlying storage.
-
-For the most part, AetherFS's interfaces are inspired by Docker and Git. All REST routes sit under the `/api` prefix.
+interact with one of our other interfaces as they abstract away the complexity of the underlying storage. For reference,
+see how our [Web UI](#web) is written against the various APIs. 
 
 **DatasetAPI**
 
@@ -308,3 +293,24 @@ encryption support (assuming interest).
 #### Encryption in Transit
 
 Where possible, our systems leverage TLS certificates to encrypt communication between processes.
+
+<!--
+**BitTorrent**
+
+Indeed's RAD ecosystem used the [BitTorrent][] protocol to replicate information around the world. This was done to
+reduce the data load on the producer machine. However, for Indeed to leverage BitTorrent, they needed to modify the
+torrent manifest to propagate the last modified times for a file. This adds a maintenance burden since we would then
+need to maintain a [fork][]. Similarly, the academic community has latched onto this at [Florida State University][]
+where they use BitTorrent to share large datasets between researchers.
+
+While AetherFS does not use BitTorrent, we do lift some concepts from the protocol. For example, our dataset manifest
+uses a similar structure to a BitTorrent manifest since we deal with similar structures. Similar to BitTorrent, AetherFS
+chunks the data into blocks, optimized for storage in [AWS S3][] (or equivalent). When read from S3, we break blocks
+down into smaller, cache optimized blocks. For better performance, we can tier the sizes of our caching layers. This
+will be explained more in depth later on.
+
+[Florida State University]: https://web.archive.org/web/20130402200554/https://www.hpc.fsu.edu/index.php?option=com_wrapper&view=wrapper&Itemid=80
+[BitTorrent]: https://en.wikipedia.org/wiki/BitTorrent
+[fork]: https://github.com/indeedeng/ttorrent
+[AWS S3]: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html
+-->
