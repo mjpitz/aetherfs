@@ -83,3 +83,13 @@ dist: .dist
 	./scripts/dist-web.sh
 	make legal
 	./scripts/dist-go.sh
+
+# useful shortcuts for release
+
+tag/release:
+	npm version "$(shell date +%y.%m.0)"
+	git push --follow-tags
+
+tag/patch:
+	npm version patch
+	git push --follow-tags

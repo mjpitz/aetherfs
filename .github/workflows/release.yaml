@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
-      - container
+      - distribute
 
     steps:
       - name: Checkout
