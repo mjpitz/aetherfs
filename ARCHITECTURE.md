@@ -263,11 +263,11 @@ detail.
 
 ### Data Management
 
-#### Packing 
-
 <a href="docs/assets/seen-stored-cached.png">
 <img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
 </a>
+
+#### Packing 
 
 When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single 
 contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer. For 
