@@ -121,7 +121,7 @@ datasets.
 ## Implementation
 
 <a href="docs/assets/seen-stored-cached.png">
-<img src="https://aetherfs.tech/assets/overview.png" align="right" width="60%"/>
+<img src="https://aetherfs.tech/assets/overview.png" align="right" width="40%"/>
 </a>
 
 AaetherFS deploys as a simple client-server architecture, with a few caveats. It's distributed as a single binary making
