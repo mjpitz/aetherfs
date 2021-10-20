@@ -1,0 +1,5 @@
+charts-repo: https://aetherfs.tech/
+owner: mjpitz
+git-repo: aetherfs
+remote: charts
+release-name-template: "v{{ .Version }}"
