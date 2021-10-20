@@ -9,13 +9,14 @@
   * [Components](#components)
     * [AetherFS Hub](#aetherfs-hub)
     * [AetherFS Agent](#aetherfs-agent)
+    * [AetherFS CLI](#aetherfs-cli)
   * [Interfaces](#interfaces)
     * [REST & gRPC](#rest--grpc)
     * [HTTP File Server](#http-file-server)
     * [FUSE File System](#fuse-file-system)
     * [Web](#web)
-  * [Configuration](#configuration)
-    * [Clustering](#clustering)
+  * [Data Management](#data-management)
+    * [Packing](#packing)
     * [Persistence](#persistence)
     * [Caching](#caching)
   * [Security & Privacy](#security--privacy)
@@ -120,31 +121,52 @@ datasets.
 ## Implementation
 
 <a href="docs/assets/seen-stored-cached.png">
-<img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
+<img src="https://aetherfs.tech/assets/overview.png" align="right" width="60%"/>
 </a>
 
-When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single 
-contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer. For 
-example, Amazon Athena documentation suggests using S3 objects between 256MiB and 1GiB to optimize network bandwidth.
-<!-- needs citation -->
-
-Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While producers 
-have control over the size of the blocks that are stored in AetherFS, they do not control the size of the cacheable 
-parts. This allows consumers of datasets to tune their usage based by adding more memory or disk where they need to.
+AaetherFS deploys as a simple client-server architecture, with a few caveats. It's distributed as a single binary making
+the full suite of components accessible to users.
 
 ### Components
 
-AetherFS is distributed as a single binary. Each component provides both a REST and gRPC interface. Since we leverage
-streaming APIs, not all gRPC calls are available on the REST interface. Additionally, the REST interface provides an
-[HTTP file server](#http-file-server) where files can be read directly.
-
 #### AetherFS Hub
+
+![role: server](https://img.shields.io/badge/role-server-white?style=for-the-badge)
+![interfaces: grpc, file server, rest, web](https://img.shields.io/badge/interfaces-grpc,%20file%20server,%20rest,%20web-white?style=for-the-badge)
 
 The AetherFS Hub is the primary component in AetherFS. It provides the core interfaces that are leverage by all other
 components in AetherFS. The hub is responsible for managing the underlying storage tier and verifying the
 authenticated clients have access to the desired dataset.
 
+```
+$ aetherfs run hub -h
+NAME:
+   aetherfs run hub - Runs the AetherFS Hub process
+
+USAGE:
+   aetherfs run hub [options]
+
+DESCRIPTION:
+   The aetherfs-hub process is responsible for collecting and hosting datasets.
+
+OPTIONS:
+   --port value                               which port the HTTP server should be bound to (default: 8080) [$PORT]
+   --tls_cert_path value                      where to locate certificates for communication [$TLS_CERT_PATH]
+   --storage_driver value                     configure how information is stored (default: "s3") [$STORAGE_DRIVER]
+   --storage_s3_endpoint value                location of s3 endpoint (default: "s3.amazonaws.com") [$STORAGE_S3_ENDPOINT]
+   --storage_s3_tls_cert_path value           where to locate certificates for communication [$STORAGE_S3_TLS_CERT_PATH]
+   --storage_s3_access_key_id value           the access key id used to identify the client [$STORAGE_S3_ACCESS_KEY_ID]
+   --storage_s3_secret_access_key value       the secret access key used to authenticate the client [$STORAGE_S3_SECRET_ACCESS_KEY]
+   --storage_s3_region value                  the region where the bucket exists [$STORAGE_S3_REGION]
+   --storage_s3_bucket value                  the name of the bucket to use [$STORAGE_S3_BUCKET]
+   --help, -h                                 show help (default: false)
+
+```
+
 #### AetherFS Agent
+
+![role: client, server](https://img.shields.io/badge/role-client,%20server-white?style=for-the-badge)
+![interfaces: grpc, file server, fuse, rest](https://img.shields.io/badge/interfaces-grpc,%20file%20server,%20fuse,%20rest-white?style=for-the-badge)
 
 The AetherFS agent is an optional sidecar process. It provides an application level cache for block data and can also
 manage a local file system path (if enabled). It provides a special `AgentAPI` that can publish datasets 
@@ -152,10 +174,43 @@ programmatically.
 
 _Not yet implemented._
 
+```
+$ aetherfs run agent -h
+```
+
 #### AetherFS CLI
 
+![role: client](https://img.shields.io/badge/role-client-white?style=for-the-badge)
+![interfaces: command line, fuse](https://img.shields.io/badge/interfaces-command%20line,%20fuse-white?style=for-the-badge)
+
 End users can interact with a command line interface (CLI) to push and pull datasets from AetherFS hubs. It's the
-primary point of interaction for operators and engineers.
+primary point of interaction for operators and engineers. It also contains the necessary code to run and operate your
+own hub and agent processes.
+
+```
+$ aetherfs -h
+
+NAME:
+   aetherfs - A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).
+
+USAGE:
+   aetherfs [options] <command>
+
+COMMANDS:
+   pull     Pulls a dataset from AetherFS
+   push     Pushes a dataset into AetherFS
+   run      Run the various AetherFS processes
+   version  Print the binary version information
+
+GLOBAL OPTIONS:
+   --log_level value   adjust the verbosity of the logs (default: "info") [$LOG_LEVEL]
+   --log_format value  configure the format of the logs (default: "json") [$LOG_FORMAT]
+   --help, -h          show help (default: false)
+
+COPYRIGHT:
+   Copyright 2021 The AetherFS Authors - All Rights Reserved
+
+```
 
 ### Interfaces
 
@@ -199,15 +254,28 @@ _Not yet implemented._
 
 A web interface is available under the `/ui` prefix. It allows you to explore datasets, their tags, and even files
 within the dataset from a graphical interface. If you include a `README.md` file in the root of your dataset, we're
-able to render inline in the browser.
+able to render inline in the browser. Eventually, it will even be able to provide insight into how well your dataset 
+performs between versions.
 
-### Configuration
+In addition to providing a way to explore datasets, it serves a Swagger UI for engineers to explore the API in more 
+detail.
 
-<!-- todo: add some pretext -->
+### Data Management
 
-#### Clustering
+#### Packing 
 
-<!-- todo -->
+<a href="docs/assets/seen-stored-cached.png">
+<img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
+</a>
+
+When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single 
+contiguous blob. This large blob is broken into smaller blocks that are ideally sized for your storage layer. For 
+example, Amazon Athena documentation suggests using S3 objects between 256MiB and 1GiB to optimize network bandwidth.
+<!-- needs citation -->
+
+Each dataset can choose their own block size, ideally striving to get the most reuse between versions. While producers 
+have control over the size of the blocks that are stored in AetherFS, they do not control the size of the cacheable 
+parts. This allows consumers of datasets to tune their usage based by adding more memory or disk where they need to.
 
 #### Persistence
 
@@ -215,7 +283,7 @@ able to render inline in the browser.
 
 #### Caching
 
-<!-- todo -->
+_Not yet implemented._
 
 ### Security & Privacy
 
@@ -223,11 +291,11 @@ able to render inline in the browser.
 
 #### Authentication
 
-<!-- todo -->
+_Not yet implemented._
 
 #### Authorization
 
-<!-- todo -->
+_Not yet implemented._
 
 #### Encryption at Rest
 
