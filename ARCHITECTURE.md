@@ -267,6 +267,10 @@ detail.
 <img src="https://aetherfs.tech/assets/seen-stored-cached.png" align="right" width="40%"/>
 </a>
 
+There isn't a ton of bells and whistles to how data is managed within the AetherFS architecture. We expect the storage
+provider to offer durability guarantees. Caching will play a more important role in the next release and will require
+some detail.
+
 #### Packing 
 
 When uploading files to AetherFS, we pack all files found in a target directory, zip, or tarball into a single 
