@@ -8,6 +8,9 @@ golangci-lint run --fix
 
 cd web
 
+current_platform="$(uname -s)-$(uname -m)"
+last_platform=""
+
 if [[ -e node_modules/.cache/platform.txt ]]; then
   last_platform="$(cat node_modules/.cache/platform.txt)"
 fi
