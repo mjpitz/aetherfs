@@ -57,6 +57,11 @@ docker/shell: .docker/shell
 docker/release:
 	docker buildx build . \
 		--platform linux/amd64,linux/arm64 \
+		--label "org.opencontainers.image.source=https://github.com/mjpitz/aetherfs" \
+		--label "org.opencontainers.image.version=$(VERSION)" \
+		--label "org.opencontainers.image.licenses=AGPL-3.0-only" \
+		--label "org.opencontainers.image.title=AetherFS" \
+		--label "org.opencontainers.image.description=" \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:latest \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:$(VERSION) \
 		--file ./docker/aetherfs/Dockerfile \
