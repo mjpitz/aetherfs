@@ -25,7 +25,7 @@ download new or updated portions.
 This project is under active development. The lists below detail aspirational features and documentation.
 
 - Documentation
-  - [Architecture Document](https://github.com/mjpitz/aetherfs/blob/main/ARCHITECTURE.md)
+  - [Architecture Document](https://github.com/mjpitz/aetherfs/wiki/Architecture)
 - Features
   - HTTP file server for ease of interaction
   - REST and gRPC APIs for programmatic interaction
