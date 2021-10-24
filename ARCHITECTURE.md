@@ -48,7 +48,7 @@ everything in S3. While I have not used Hollow myself, I see the utility it prov
 
 As I've run more workloads on my Raspberry Pis, I've found myself wanting a different type of file system. Since my pis
 don't have a lot of disk capacity, I want to be able to distribute parts of my total data across the cluster. In 
-addition to that, I want to deduplicate blocks of data that might repeat between versions of that to help keep the
+addition to that, I want to deduplicate blocks of data that might repeat between versions to help keep the data 
 footprint low.
 
 ### Concepts
