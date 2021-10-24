@@ -26,6 +26,7 @@ This project is under active development. The lists below detail aspirational fe
 
 - Documentation
   - [Architecture Document](https://github.com/mjpitz/aetherfs/wiki/Architecture)
+  - [General Wiki](https://github.com/mjpitz/aetherfs/wiki)
 - Features
   - HTTP file server for ease of interaction
   - REST and gRPC APIs for programmatic interaction
@@ -57,7 +58,6 @@ This will be the initial release of AetherFS. It includes the "essentials".
 - Command to upload to and tag datasets in AetherFS.
 - Command to download tagged datasets from AetherFS.
 - Minimal web interface.
-- Data encrypted in transit.
 
 ### v22.02
 
@@ -68,3 +68,4 @@ interaction for end users (provided there's interest in the system).
 - Block caching to improve performance and usage of S3.
 - Command to authenticate clients.
 - Enforce access controls around datasets.
+- Data encrypted in transit.
