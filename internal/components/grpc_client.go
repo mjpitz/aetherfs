@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/mjpitz/aetherfs/internal/lifecycle"
+	"github.com/mjpitz/myago/lifecycle"
 )
 
 const defaultServiceConfig = `{

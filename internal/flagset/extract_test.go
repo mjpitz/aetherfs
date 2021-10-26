@@ -13,9 +13,9 @@ import (
 )
 
 type Options struct {
-	Endpoint    string        `json:"endpoint"    aliases:"e" usage:"the endpoint of the server we're speaking to" default:"default-endpoint"`
-	EnableSSL   bool          `json:"enable_ssl"  aliases:"s" usage:"enable encryption between processes"`
-	Temperature int           `json:"temperature" aliases:"t"`
+	Endpoint    string `json:"endpoint"    aliases:"e" usage:"the endpoint of the server we're speaking to" default:"default-endpoint"`
+	EnableSSL   bool   `json:"enable_ssl"  aliases:"s" usage:"enable encryption between processes"`
+	Temperature int    `json:"temperature" aliases:"t"`
 }
 
 type Nested struct {

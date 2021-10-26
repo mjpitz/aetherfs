@@ -32,7 +32,7 @@ func (f *FileSystem) openDatasetList(scope string) (http.File, error) {
 
 	datasets := make([]string, 0)
 	for _, dataset := range listResp.GetDatasets() {
-		if scope == "" || strings.HasPrefix(dataset.GetName(), scope + "/") {
+		if scope == "" || strings.HasPrefix(dataset.GetName(), scope+"/") {
 			datasets = append(datasets, dataset.GetName())
 		}
 	}

@@ -16,8 +16,8 @@ import (
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
 	"github.com/mjpitz/aetherfs/internal/flagset"
-	"github.com/mjpitz/aetherfs/internal/lifecycle"
 	"github.com/mjpitz/aetherfs/internal/logger"
+	"github.com/mjpitz/myago/lifecycle"
 )
 
 //go:embed AUTHORS

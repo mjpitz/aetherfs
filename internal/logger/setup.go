@@ -26,7 +26,7 @@ func Setup(ctx context.Context, cfg Config) context.Context {
 		if err != nil {
 			panic(err)
 		}
-   	}
+	}
 
 	zapConfig := zap.NewProductionConfig()
 	zapConfig.Level.SetLevel(level)

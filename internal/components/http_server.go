@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/mjpitz/aetherfs/internal/lifecycle"
+	"github.com/mjpitz/myago/lifecycle"
 )
 
 type HTTPServerConfig struct {
