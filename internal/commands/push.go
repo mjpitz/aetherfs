@@ -23,8 +23,8 @@ import (
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 	"github.com/mjpitz/aetherfs/internal/blocks"
 	"github.com/mjpitz/aetherfs/internal/components"
-	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/headers"
+	"github.com/mjpitz/myago/flagset"
 )
 
 // PushConfig encapsulates all the configuration required to push datasets to AetherFS.

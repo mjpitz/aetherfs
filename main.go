@@ -15,8 +15,8 @@ import (
 
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
-	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/logger"
+	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/lifecycle"
 )
 
@@ -55,7 +55,7 @@ func main() {
 		UsageText: "aetherfs [options] <command>",
 		Version:   fmt.Sprintf("%s (%s)", version, commit),
 		Commands: []*cli.Command{
-			//commands.Auth(),
+			commands.Auth(),
 			commands.Pull(),
 			commands.Push(),
 			commands.Run(),

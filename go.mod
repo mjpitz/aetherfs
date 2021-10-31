@@ -11,11 +11,10 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0
 	github.com/minio/minio-go/v7 v7.0.14
-	github.com/mjpitz/myago v0.0.0-20211026014018-435874125e6a
+	github.com/mjpitz/myago v0.0.0-20211027141140-272450e284f5
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/rs/cors v1.8.0
-	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20210907225631-ff17edfbf26d

@@ -9,7 +9,7 @@ import (
 
 	"github.com/mjpitz/aetherfs/internal/auth"
 	"github.com/mjpitz/aetherfs/internal/components"
-	"github.com/mjpitz/aetherfs/internal/flagset"
+	"github.com/mjpitz/myago/flagset"
 )
 
 // AuthConfig encapsulates all the configuration required to log in to an AetherFS instance.
@@ -40,5 +40,6 @@ func Auth() *cli.Command {
 			return nil
 		},
 		HideHelpCommand: true,
+		Hidden:          true,
 	}
 }

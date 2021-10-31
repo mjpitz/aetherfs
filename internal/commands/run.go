@@ -16,7 +16,7 @@ func Run() *cli.Command {
 		Usage:     "Run the various AetherFS processes",
 		UsageText: "aetherfs run <process>",
 		Subcommands: []*cli.Command{
-			//daemons.Agent(),
+			run.Agent(),
 			run.Hub(),
 		},
 		HideHelpCommand: true,

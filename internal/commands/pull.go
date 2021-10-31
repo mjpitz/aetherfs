@@ -19,8 +19,8 @@ import (
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 	"github.com/mjpitz/aetherfs/internal/components"
-	"github.com/mjpitz/aetherfs/internal/flagset"
 	"github.com/mjpitz/aetherfs/internal/fs"
+	"github.com/mjpitz/myago/flagset"
 )
 
 const (
