@@ -11,13 +11,17 @@ import (
 	"strings"
 	"time"
 
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
-	"github.com/mjpitz/aetherfs/internal/logger"
 	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/lifecycle"
+	"github.com/mjpitz/myago/zaputil"
 )
 
 //go:embed AUTHORS
@@ -28,7 +32,7 @@ var commit = "none"
 var date = time.Now().Format(time.RFC3339)
 
 type GlobalConfig struct {
-	Log logger.Config `json:"log"`
+	Log zaputil.Config `json:"log"`
 	//StateDir string        `json:"state_dir" usage:"location where AetherFS can write small amounts of data"`
 	//Config   string        `json:"config"    usage:"location of the command configuration file"`
 }
@@ -36,16 +40,8 @@ type GlobalConfig struct {
 func main() {
 	compiled, _ := time.Parse(time.RFC3339, date)
 
-	format := "json"
-	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
-		format = "console" // looks like terminal session, use console logging
-	}
-
 	cfg := &GlobalConfig{
-		Log: logger.Config{
-			Level:  "info",
-			Format: format,
-		},
+		Log: zaputil.DefaultConfig(),
 		//StateDir: "/usr/local/aetherfs",
 	}
 
@@ -63,8 +59,17 @@ func main() {
 		},
 		Flags: flagset.Extract(cfg),
 		Before: func(ctx *cli.Context) error {
-			ctx.Context = logger.Setup(ctx.Context, cfg.Log)
+			ctx.Context = zaputil.Setup(ctx.Context, cfg.Log)
 			ctx.Context = lifecycle.Setup(ctx.Context)
+
+			// special grpc things
+			logger := zaputil.Extract(ctx.Context)
+			ctx.Context = ctxzap.ToContext(ctx.Context, logger)
+
+			if cfg.Log.Level != zapcore.DebugLevel.String() {
+				logger = zap.NewNop()
+			}
+			grpc_zap.ReplaceGrpcLoggerV2(logger)
 
 			return nil
 		},
