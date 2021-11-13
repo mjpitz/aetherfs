@@ -4,6 +4,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
@@ -22,14 +23,14 @@ type Stores struct {
 	DatasetAPIServer datasetv1.DatasetAPIServer
 }
 
-func ObtainStores(cfg Config) (*Stores, error) {
+func ObtainStores(ctx context.Context, cfg Config) (*Stores, error) {
 	var blockAPI blockv1.BlockAPIServer
 	var datasetAPI datasetv1.DatasetAPIServer
 	var err error
 
 	switch cfg.Driver {
 	case "s3":
-		blockAPI, datasetAPI, err = s3.ObtainStores(cfg.S3)
+		blockAPI, datasetAPI, err = s3.ObtainStores(ctx, cfg.S3)
 
 	default:
 		err = fmt.Errorf("invalid driver: %s", cfg.Driver)

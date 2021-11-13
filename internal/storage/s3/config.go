@@ -15,20 +15,20 @@ import (
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
-	"github.com/mjpitz/aetherfs/internal/components"
+	"github.com/mjpitz/myago/livetls"
 )
 
 type Config struct {
-	Endpoint        string               `json:"endpoint"          usage:"location of s3 endpoint" default:"s3.amazonaws.com"`
-	TLS             components.TLSConfig `json:"tls"`
-	AccessKeyID     string               `json:"access_key_id"     usage:"the access key id used to identify the client"`
-	SecretAccessKey string               `json:"secret_access_key" usage:"the secret access key used to authenticate the client"`
-	Region          string               `json:"region"            usage:"the region where the bucket exists"`
-	Bucket          string               `json:"bucket"            usage:"the name of the bucket to use"`
+	Endpoint        string         `json:"endpoint"          usage:"location of s3 endpoint" default:"s3.amazonaws.com"`
+	TLS             livetls.Config `json:"tls"`
+	AccessKeyID     string         `json:"access_key_id"     usage:"the access key id used to identify the client"`
+	SecretAccessKey string         `json:"secret_access_key" usage:"the secret access key used to authenticate the client"`
+	Region          string         `json:"region"            usage:"the region where the bucket exists"`
+	Bucket          string         `json:"bucket"            usage:"the name of the bucket to use"`
 }
 
-func ObtainStores(cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServer, error) {
-	tls, err := components.LoadCertificates(cfg.TLS)
+func ObtainStores(ctx context.Context, cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServer, error) {
+	tls, err := livetls.New(ctx, cfg.TLS)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +78,6 @@ func ObtainStores(cfg Config) (blockv1.BlockAPIServer, datasetv1.DatasetAPIServe
 		return nil, nil, err
 	}
 
-	ctx := context.Background()
 	err = s3Client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{})
 	exists, _ := s3Client.BucketExists(ctx, cfg.Bucket)
 	if !exists {

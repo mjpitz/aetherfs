@@ -19,7 +19,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
-	web2 "github.com/mjpitz/aetherfs/internal/web"
+	"github.com/mjpitz/aetherfs/internal/web"
 	"github.com/mjpitz/myago/flagset"
 )
 
@@ -42,8 +42,8 @@ func Hub() *cli.Command {
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			serverConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
-				Target:    fmt.Sprintf("localhost:%d", cfg.HTTPServerConfig.Port),
-				TLSConfig: cfg.HTTPServerConfig.TLSConfig,
+				Target: fmt.Sprintf("localhost:%d", cfg.HTTPServerConfig.Port),
+				TLS:    cfg.HTTPServerConfig.TLS,
 			})
 			if err != nil {
 				return err
@@ -52,7 +52,7 @@ func Hub() *cli.Command {
 			blockAPI := blockv1.NewBlockAPIClient(serverConn)
 			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
 
-			stores, err := storage.ObtainStores(cfg.StorageConfig)
+			stores, err := storage.ObtainStores(ctx.Context, cfg.StorageConfig)
 			if err != nil {
 				return err
 			}
@@ -88,7 +88,7 @@ func Hub() *cli.Command {
 
 				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
 			})
-			ginServer.Group("/ui").GET("*path", gin.WrapH(web2.Handle()))
+			ginServer.Group("/ui").GET("*path", gin.WrapH(web.Handle()))
 
 			ginServer.GET("/", func(ginctx *gin.Context) {
 				ginctx.Redirect(http.StatusTemporaryRedirect, "/ui")

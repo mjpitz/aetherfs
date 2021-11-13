@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/mjpitz/myago/lifecycle"
+	"github.com/mjpitz/myago/livetls"
 )
 
 const defaultServiceConfig = `{
@@ -26,8 +27,8 @@ const defaultServiceConfig = `{
 }`
 
 type GRPCClientConfig struct {
-	Target    string    `json:"target" usage:"address the grpc client should dial"`
-	TLSConfig TLSConfig `json:"tls"`
+	Target string         `json:"target" usage:"address the grpc client should dial"`
+	TLS    livetls.Config `json:"tls"`
 }
 
 func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, error) {
@@ -52,7 +53,7 @@ func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, er
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(streamInterceptors...)),
 	}
 
-	tlsConfig, err := LoadCertificates(cfg.TLSConfig)
+	tlsConfig, err := livetls.New(ctx, cfg.TLS)
 	if err != nil {
 		return nil, err
 	}

@@ -48,8 +48,8 @@ func Agent() *cli.Command {
 		Flags:       flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			agentConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
-				Target:    fmt.Sprintf("localhost:%d", cfg.HTTPServerConfig.Port),
-				TLSConfig: cfg.HTTPServerConfig.TLSConfig,
+				Target: fmt.Sprintf("localhost:%d", cfg.HTTPServerConfig.Port),
+				TLS:    cfg.HTTPServerConfig.TLS,
 			})
 			if err != nil {
 				return err

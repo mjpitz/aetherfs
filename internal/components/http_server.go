@@ -15,15 +15,16 @@ import (
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/mjpitz/myago/lifecycle"
+	"github.com/mjpitz/myago/livetls"
 )
 
 type HTTPServerConfig struct {
-	Port      int       `json:"port" usage:"which port the HTTP server should be bound to" default:"8080"`
-	TLSConfig TLSConfig `json:"tls"`
+	Port int            `json:"port" usage:"which port the HTTP server should be bound to" default:"8080"`
+	TLS  livetls.Config `json:"tls"`
 }
 
 func ListenAndServeHTTP(ctx context.Context, cfg HTTPServerConfig, handler http.Handler) error {
-	tlsConfig, err := LoadCertificates(cfg.TLSConfig)
+	tlsConfig, err := livetls.New(ctx, cfg.TLS)
 	if err != nil {
 		return err
 	}
