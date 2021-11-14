@@ -13,3 +13,10 @@ else
   goreleaser
 fi
 
+os=$(uname | tr '[:upper:]' '[:lower:]')
+arch="$(uname -m)"
+if [[ "$arch" == "x86_64" ]]; then
+  ln -s "$(pwd)/dist/aetherfs_${os}_amd64/aetherfs" "$(pwd)/aetherfs"
+elif [[ "$arch" == "aarch64" ]]; then
+  ln -s "$(pwd)/dist/aetherfs_${os}_arm64/aetherfs" "$(pwd)/aetherfs"
+fi
