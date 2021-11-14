@@ -17,8 +17,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/mjpitz/aetherfs/internal/authors"
 	"github.com/mjpitz/aetherfs/internal/commands"
+	"github.com/mjpitz/myago/authors"
 	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/lifecycle"
 	"github.com/mjpitz/myago/zaputil"
