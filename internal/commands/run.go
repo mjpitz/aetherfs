@@ -20,13 +20,15 @@ import (
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
 	"github.com/mjpitz/aetherfs/internal/web"
+	"github.com/mjpitz/myago/config"
 	"github.com/mjpitz/myago/flagset"
 )
 
 type RunConfig struct {
-	HTTPServerConfig components.HTTPServerConfig `json:""`
-	GRPCServerConfig components.GRPCServerConfig `json:""`
-	StorageConfig    storage.Config              `json:"storage"`
+	ConfigFile string `json:"config_file" usage:"specify the location of a file containing the run configuration"`
+	components.HTTPServerConfig
+	components.GRPCServerConfig
+	StorageConfig storage.Config `json:"storage"`
 }
 
 // Run returns a command that can execute a given part of the ecosystem.
@@ -34,10 +36,20 @@ func Run() (cmd *cli.Command) {
 	cfg := &RunConfig{}
 
 	cmd = &cli.Command{
-		Name:        "run",
-		Usage:       "Runs the AetherFS process",
-		UsageText:   "aetherfs run [options]",
-		Flags:       flagset.Extract(cfg),
+		Name:      "run",
+		Usage:     "Runs the AetherFS process",
+		UsageText: "aetherfs run [options]",
+		Flags:     flagset.Extract(cfg),
+		Before: func(ctx *cli.Context) error {
+			if cfg.ConfigFile != "" {
+				err := config.Load(ctx.Context, cfg, cfg.ConfigFile)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
 		Subcommands: []*cli.Command{
 			{
 				Name:            "hub",
@@ -84,6 +96,7 @@ func Run() (cmd *cli.Command) {
 			ginServer.Use(components.TranslateHeadersToMetadata())
 
 			ginServer.Group("/api").Any("*path", gin.WrapH(apiServer))
+
 			ginServer.Group("/fs").GET("*path", func(ginctx *gin.Context) {
 				// handle FileServer requests (need to trim prefix)
 				fileSystem := &fs.FileSystem{
@@ -97,6 +110,7 @@ func Run() (cmd *cli.Command) {
 
 				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
 			})
+
 			ginServer.Group("/ui").GET("*path", gin.WrapH(web.Handle()))
 
 			ginServer.GET("/", func(ginctx *gin.Context) {

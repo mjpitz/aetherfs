@@ -20,7 +20,8 @@ import (
 )
 
 type GRPCServerConfig struct {
-	AuthConfig auth.ClientConfig `json:""`
+	auth.Config
+	auth.OIDCClientConfig `json:"oidc"`
 }
 
 func GRPCServer(ctx context.Context, cfg GRPCServerConfig) *grpc.Server {
@@ -28,10 +29,10 @@ func GRPCServer(ctx context.Context, cfg GRPCServerConfig) *grpc.Server {
 
 	var authFunc grpc_auth.AuthFunc
 
-	switch cfg.AuthConfig.AuthType {
+	switch cfg.Config.AuthType {
 	case "oidc":
 		authFunc = grpc_auth.AuthFunc(auth.Composite(
-			auth.OIDCAuthenticator(cfg.AuthConfig.OIDC.Issuer),
+			auth.OIDCAuthenticator(cfg.OIDCClientConfig.Issuer),
 			auth.RequireAuthentication(),
 		))
 	default:

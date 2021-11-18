@@ -19,5 +19,6 @@ func Handle() http.Handler {
 	if err != nil {
 		panic(err)
 	}
+
 	return http.StripPrefix("/ui/", http.FileServer(http.FS(fs)))
 }

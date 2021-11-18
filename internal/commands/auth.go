@@ -14,8 +14,8 @@ import (
 
 // AuthConfig encapsulates all the configuration required to log in to an AetherFS instance.
 type AuthConfig struct {
-	auth.Config                 `json:""`
-	components.GRPCClientConfig `json:""`
+	auth.Config
+	components.GRPCClientConfig
 
 	Remove bool `json:"remove" usage:"set to prune existing credentials"`
 }
