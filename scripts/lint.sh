@@ -15,15 +15,20 @@ if [[ -e node_modules/.cache/platform.txt ]]; then
   last_platform="$(cat node_modules/.cache/platform.txt)"
 fi
 
-package_json_last_modified=$(date +%s -r package.json)
-node_modules_last_modified=$(date +%s -r node_modules || echo -n "")
-
-# reinstall dependencies if there are new dependencies or if we switch platforms
-if [[ $(( package_json_last_modified )) -gt $(( node_modules_last_modified )) ]] || [[ "${last_platform}" != "${current_platform}" ]]; then
+function reinstall() {
   npm install
   mkdir -p node_modules/.cache
   echo -n "${current_platform}" > node_modules/.cache/platform.txt
   npm audit fix
+}
+
+# reinstall dependencies if there are new dependencies or if we switch platforms
+if [[ $(( $(date +%s -r package.json) )) -gt $(( $(date +%s -r node_modules) )) ]]; then
+  echo "detected new package dependencies, reinstalling dependencies"
+  reinstall
+elif [[ "${last_platform}" != "${current_platform}" ]]; then
+  echo "changed platforms, reinstalling dependencies"
+  reinstall
 fi
 
 npm run lint

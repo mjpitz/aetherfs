@@ -13,6 +13,8 @@ else
   goreleaser
 fi
 
+rm -rf "$(pwd)/aetherfs"
+
 os=$(uname | tr '[:upper:]' '[:lower:]')
 arch="$(uname -m)"
 if [[ "$arch" == "x86_64" ]]; then
