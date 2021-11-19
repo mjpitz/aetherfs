@@ -17,8 +17,11 @@ option java_multiple_files = true;
 
 // PublishRequest instructs the agent to publish the dataset found at the provided path with the associated tags.
 message PublishRequest {
-  string path = 1;
-  repeated aetherfs.dataset.v1.Tag tags = 2;
+  bool sync = 1;
+
+  string path = 2;
+  repeated aetherfs.dataset.v1.Tag tags = 3;
+  int32 block_size = 4;
 }
 
 // PublishResponse

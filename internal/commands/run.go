@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -14,8 +15,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
 
+	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
+	"github.com/mjpitz/aetherfs/internal/agent"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
@@ -26,9 +29,12 @@ import (
 
 type RunConfig struct {
 	ConfigFile string `json:"config_file" usage:"specify the location of a file containing the run configuration"`
+
 	components.HTTPServerConfig
 	components.GRPCServerConfig
-	StorageConfig storage.Config `json:"storage"`
+
+	Agent   agent.Config   `json:"agent"`
+	Storage storage.Config `json:"storage"`
 }
 
 // Run returns a command that can execute a given part of the ecosystem.
@@ -73,7 +79,7 @@ func Run() (cmd *cli.Command) {
 			blockAPI := blockv1.NewBlockAPIClient(serverConn)
 			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
 
-			stores, err := storage.ObtainStores(ctx.Context, cfg.StorageConfig)
+			stores, err := storage.ObtainStores(ctx.Context, cfg.Storage)
 			if err != nil {
 				return err
 			}
@@ -87,6 +93,20 @@ func Run() (cmd *cli.Command) {
 			apiServer := runtime.NewServeMux()
 			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, serverConn)
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
+
+			if cfg.Agent.Enable {
+				agentService := &agent.Service{
+					BlockAPI:   blockAPI,
+					DatasetAPI: datasetAPI,
+				}
+
+				if cfg.Agent.Shutdown.Enable {
+					ctx.Context, agentService.InitiateShutdown = context.WithCancel(ctx.Context)
+				}
+
+				agentv1.RegisterAgentAPIServer(grpcServer, agentService)
+				_ = agentv1.RegisterAgentAPIHandler(ctx.Context, apiServer, serverConn)
+			}
 
 			// prepopulate metrics
 			grpc_prometheus.Register(grpcServer)
