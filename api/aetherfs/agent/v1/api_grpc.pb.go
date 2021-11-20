@@ -19,8 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentAPIClient interface {
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
-	Subscribe(ctx context.Context, opts ...grpc.CallOption) (AgentAPI_SubscribeClient, error)
+	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (*SubscribeResponse, error)
 	GracefulShutdown(ctx context.Context, in *GracefulShutdownRequest, opts ...grpc.CallOption) (*GracefulShutdownResponse, error)
+	WatchSubscription(ctx context.Context, opts ...grpc.CallOption) (AgentAPI_WatchSubscriptionClient, error)
 }
 
 type agentAPIClient struct {
@@ -40,35 +41,13 @@ func (c *agentAPIClient) Publish(ctx context.Context, in *PublishRequest, opts .
 	return out, nil
 }
 
-func (c *agentAPIClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (AgentAPI_SubscribeClient, error) {
-	stream, err := c.cc.NewStream(ctx, &AgentAPI_ServiceDesc.Streams[0], "/aetherfs.agent.v1.AgentAPI/Subscribe", opts...)
+func (c *agentAPIClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (*SubscribeResponse, error) {
+	out := new(SubscribeResponse)
+	err := c.cc.Invoke(ctx, "/aetherfs.agent.v1.AgentAPI/Subscribe", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &agentAPISubscribeClient{stream}
-	return x, nil
-}
-
-type AgentAPI_SubscribeClient interface {
-	Send(*SubscribeRequest) error
-	Recv() (*SubscribeResponse, error)
-	grpc.ClientStream
-}
-
-type agentAPISubscribeClient struct {
-	grpc.ClientStream
-}
-
-func (x *agentAPISubscribeClient) Send(m *SubscribeRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *agentAPISubscribeClient) Recv() (*SubscribeResponse, error) {
-	m := new(SubscribeResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *agentAPIClient) GracefulShutdown(ctx context.Context, in *GracefulShutdownRequest, opts ...grpc.CallOption) (*GracefulShutdownResponse, error) {
@@ -80,13 +59,45 @@ func (c *agentAPIClient) GracefulShutdown(ctx context.Context, in *GracefulShutd
 	return out, nil
 }
 
+func (c *agentAPIClient) WatchSubscription(ctx context.Context, opts ...grpc.CallOption) (AgentAPI_WatchSubscriptionClient, error) {
+	stream, err := c.cc.NewStream(ctx, &AgentAPI_ServiceDesc.Streams[0], "/aetherfs.agent.v1.AgentAPI/WatchSubscription", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &agentAPIWatchSubscriptionClient{stream}
+	return x, nil
+}
+
+type AgentAPI_WatchSubscriptionClient interface {
+	Send(*WatchSubscriptionRequest) error
+	Recv() (*WatchSubscriptionResponse, error)
+	grpc.ClientStream
+}
+
+type agentAPIWatchSubscriptionClient struct {
+	grpc.ClientStream
+}
+
+func (x *agentAPIWatchSubscriptionClient) Send(m *WatchSubscriptionRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *agentAPIWatchSubscriptionClient) Recv() (*WatchSubscriptionResponse, error) {
+	m := new(WatchSubscriptionResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // AgentAPIServer is the server API for AgentAPI service.
 // All implementations must embed UnimplementedAgentAPIServer
 // for forward compatibility
 type AgentAPIServer interface {
 	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
-	Subscribe(AgentAPI_SubscribeServer) error
+	Subscribe(context.Context, *SubscribeRequest) (*SubscribeResponse, error)
 	GracefulShutdown(context.Context, *GracefulShutdownRequest) (*GracefulShutdownResponse, error)
+	WatchSubscription(AgentAPI_WatchSubscriptionServer) error
 	mustEmbedUnimplementedAgentAPIServer()
 }
 
@@ -97,11 +108,14 @@ type UnimplementedAgentAPIServer struct {
 func (UnimplementedAgentAPIServer) Publish(context.Context, *PublishRequest) (*PublishResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (UnimplementedAgentAPIServer) Subscribe(AgentAPI_SubscribeServer) error {
-	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+func (UnimplementedAgentAPIServer) Subscribe(context.Context, *SubscribeRequest) (*SubscribeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedAgentAPIServer) GracefulShutdown(context.Context, *GracefulShutdownRequest) (*GracefulShutdownResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GracefulShutdown not implemented")
+}
+func (UnimplementedAgentAPIServer) WatchSubscription(AgentAPI_WatchSubscriptionServer) error {
+	return status.Errorf(codes.Unimplemented, "method WatchSubscription not implemented")
 }
 func (UnimplementedAgentAPIServer) mustEmbedUnimplementedAgentAPIServer() {}
 
@@ -134,30 +148,22 @@ func _AgentAPI_Publish_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AgentAPIServer).Subscribe(&agentAPISubscribeServer{stream})
-}
-
-type AgentAPI_SubscribeServer interface {
-	Send(*SubscribeResponse) error
-	Recv() (*SubscribeRequest, error)
-	grpc.ServerStream
-}
-
-type agentAPISubscribeServer struct {
-	grpc.ServerStream
-}
-
-func (x *agentAPISubscribeServer) Send(m *SubscribeResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *agentAPISubscribeServer) Recv() (*SubscribeRequest, error) {
-	m := new(SubscribeRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _AgentAPI_Subscribe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubscribeRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(AgentAPIServer).Subscribe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/aetherfs.agent.v1.AgentAPI/Subscribe",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).Subscribe(ctx, req.(*SubscribeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AgentAPI_GracefulShutdown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -178,6 +184,32 @@ func _AgentAPI_GracefulShutdown_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentAPI_WatchSubscription_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AgentAPIServer).WatchSubscription(&agentAPIWatchSubscriptionServer{stream})
+}
+
+type AgentAPI_WatchSubscriptionServer interface {
+	Send(*WatchSubscriptionResponse) error
+	Recv() (*WatchSubscriptionRequest, error)
+	grpc.ServerStream
+}
+
+type agentAPIWatchSubscriptionServer struct {
+	grpc.ServerStream
+}
+
+func (x *agentAPIWatchSubscriptionServer) Send(m *WatchSubscriptionResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *agentAPIWatchSubscriptionServer) Recv() (*WatchSubscriptionRequest, error) {
+	m := new(WatchSubscriptionRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // AgentAPI_ServiceDesc is the grpc.ServiceDesc for AgentAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,14 +222,18 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentAPI_Publish_Handler,
 		},
 		{
+			MethodName: "Subscribe",
+			Handler:    _AgentAPI_Subscribe_Handler,
+		},
+		{
 			MethodName: "GracefulShutdown",
 			Handler:    _AgentAPI_GracefulShutdown_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Subscribe",
-			Handler:       _AgentAPI_Subscribe_Handler,
+			StreamName:    "WatchSubscription",
+			Handler:       _AgentAPI_WatchSubscription_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

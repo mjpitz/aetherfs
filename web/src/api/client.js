@@ -8,11 +8,20 @@ const baseUrlDefault = 'localhost:8080'
 
 export default class Client {
     static default() {
+        // detect browser
+        if (window && window.location) {
+            // make this semi-dynamic
+            return new Client({
+                protocol: window.location.protocol.substr(0, window.location.protocol.length - 1),
+                baseUrl: window.location.host,
+            })
+        }
+
         return new Client()
     }
 
     constructor(opts) {
-        let { protocol, baseUrl } = opts || {}
+        let {protocol, baseUrl} = opts || {}
 
         protocol = protocol || protocolDefault
         baseUrl = baseUrl || process.env.AETHERFS_HOST

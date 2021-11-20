@@ -95,10 +95,7 @@ func Run() (cmd *cli.Command) {
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
 
 			if cfg.Agent.Enable {
-				agentService := &agent.Service{
-					BlockAPI:   blockAPI,
-					DatasetAPI: datasetAPI,
-				}
+				agentService := &agent.Service{}
 
 				if cfg.Agent.Shutdown.Enable {
 					ctx.Context, agentService.InitiateShutdown = context.WithCancel(ctx.Context)

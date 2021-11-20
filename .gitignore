@@ -1,16 +1,12 @@
+# Helm
 .cr-release-packages/
 .cr-index/
-
 /charts/**/Chart.lock
 /charts/**/*.tgz
-/gen/
+
+# Go
 /vendor/
-/out/
-naturalearthdata/
-
 /dist/
-/internal/web/
-package-lock.json
 
-coverage.txt
 aetherfs
+.coverprofile

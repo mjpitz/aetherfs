@@ -77,7 +77,7 @@ legal: .legal
 	addlicense -f ./legal/header.txt -skip yaml -skip yml docker internal proto scripts web/public web/src
 
 test:
-	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -v -race -cover -coverprofile=.coverprofile ./...
 
 gen: .gen
 .gen:
