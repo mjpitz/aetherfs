@@ -30,6 +30,12 @@ const configSnapshot = `{
       "certificate_authority": ""
     }
   },
+  "agent": {
+    "enable": false,
+    "shutdown": {
+      "enable": false
+    }
+  },
   "storage": {
     "driver": "",
     "s3": {

@@ -122,6 +122,9 @@
     "v1PublishRequest": {
       "type": "object",
       "properties": {
+        "sync": {
+          "type": "boolean"
+        },
         "path": {
           "type": "string"
         },
@@ -130,6 +133,10 @@
           "items": {
             "$ref": "#/definitions/v1Tag"
           }
+        },
+        "blockSize": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "description": "PublishRequest instructs the agent to publish the dataset found at the provided path with the associated tags."

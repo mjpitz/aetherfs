@@ -15,7 +15,7 @@ export default {
     SwaggerUIBundle({
       dom_id: "#swagger-ui",
       urls: [
-        //{ name: "Agent API",   url: process.env.BASE_URL + "swagger/aetherfs/agent/v1/api.swagger.json" },
+        { name: "Agent API",   url: process.env.BASE_URL + "swagger/aetherfs/agent/v1/api.swagger.json" },
         { name: "Block API",   url: process.env.BASE_URL + "swagger/aetherfs/block/v1/api.swagger.json" },
         { name: "Dataset API", url: process.env.BASE_URL + "swagger/aetherfs/dataset/v1/api.swagger.json" },
       ],
