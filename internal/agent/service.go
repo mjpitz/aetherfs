@@ -289,8 +289,6 @@ func (s *Service) Publish(ctx context.Context, request *agentv1.PublishRequest) 
 }
 
 func (s *Service) subscribe(ctx context.Context, host string, tags []*datasetv1.Tag, aetherFSDir string, resp *agentv1.SubscribeResponse) error {
-	logger := ctxzap.Extract(ctx)
-
 	// TODO: translate host to credentials
 
 	conn, err := components.GRPCClient(ctx, components.GRPCClientConfig{
@@ -300,6 +298,8 @@ func (s *Service) subscribe(ctx context.Context, host string, tags []*datasetv1.
 		return err
 	}
 	defer conn.Close()
+
+	logger := ctxzap.Extract(ctx).With(zap.String("host", host))
 
 	blockAPI := blockv1.NewBlockAPIClient(conn)
 	datasetAPI := datasetv1.NewDatasetAPIClient(conn)
