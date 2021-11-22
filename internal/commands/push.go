@@ -6,22 +6,22 @@ package commands
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
-	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
-	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
 	"github.com/mjpitz/aetherfs/internal/agent"
 	"github.com/mjpitz/aetherfs/internal/blocks"
-	"github.com/mjpitz/aetherfs/internal/components"
+	"github.com/mjpitz/aetherfs/internal/dataset"
 	"github.com/mjpitz/myago/flagset"
+	"github.com/mjpitz/myago/zaputil"
 )
 
 // PushConfig encapsulates all the configuration required to push datasets to AetherFS.
 type PushConfig struct {
-	BlockSize int32 `json:"block_size"   usage:"the maximum number of bytes per block in MiB"`
+	BlockSize int32           `json:"block_size"     usage:"the maximum number of bytes per block in MiB"`
+	Tags      *dataset.TagSet `json:"tags" alias:"t" usage:"name and tag of the dataset being pushed"`
 }
 
 // Push returns a command used to push datasets to upstream servers.
@@ -30,28 +30,14 @@ func Push() *cli.Command {
 		BlockSize: 256,
 	}
 
-	tags := cli.NewStringSlice() // can't put this in config struct quite yet
-
 	return &cli.Command{
 		Name:  "push",
 		Usage: "Pushes a dataset into AetherFS",
-		UsageText: ExampleString(
+		UsageText: flagset.ExampleString(
 			"aetherfs push [options] <path>",
 			"aetherfs push -t maxmind:v1 -t private.company.io/maxmind:v2 /tmp/maxmind",
 		),
-		Flags: append(
-			flagset.Extract(cfg),
-			[]cli.Flag{
-				&cli.StringSliceFlag{
-					Name:        "tag",
-					Aliases:     []string{"t"},
-					Usage:       "name and tag of the dataset being pushed",
-					Value:       tags,
-					Destination: tags,
-					Required:    true,
-				},
-			}...,
-		),
+		Flags: flagset.Extract(cfg),
 		Action: func(ctx *cli.Context) error {
 			root := ctx.Args().Get(0)
 			if root == "" {
@@ -63,39 +49,20 @@ func Push() *cli.Command {
 				return err
 			}
 
-			conn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
-				Target: lookupHost(),
-			})
-			if err != nil {
-				return err
-			}
-			defer conn.Close()
-
-			agentService := &agent.Service{
-				BlockAPI:   blockv1.NewBlockAPIClient(conn),
-				DatasetAPI: datasetv1.NewDatasetAPIClient(conn),
-			}
-
-			// cache some metadata for later on to make things easier
 			publishRequest := &agentv1.PublishRequest{
 				Sync:      true,
 				Path:      root,
 				BlockSize: cfg.BlockSize * int32(blocks.Mebibyte),
 			}
 
-			for _, tag := range tags.Value() {
-				parts := strings.Split(tag, ":")
-				if len(parts) < 2 {
-					parts = append(parts, "latest")
-				}
-
-				publishRequest.Tags = append(publishRequest.Tags, &datasetv1.Tag{
-					Name:    parts[0],
-					Version: parts[1],
-				})
+			for _, tag := range cfg.Tags.Value() {
+				publishRequest.Tags = append(publishRequest.Tags, tag.String())
 			}
 
-			_, err = agentService.Publish(ctx.Context, publishRequest)
+			zaputil.Extract(ctx.Context).Debug("publish", zap.Stringer("request", publishRequest))
+
+			_, err = (&agent.Service{}).Publish(ctx.Context, publishRequest)
+
 			return err
 		},
 		HideHelpCommand: true,

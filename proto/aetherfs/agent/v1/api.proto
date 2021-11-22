@@ -5,7 +5,6 @@ syntax = "proto3";
 
 package aetherfs.agent.v1;
 
-import "aetherfs/dataset/v1/tag.proto";
 import "google/api/annotations.proto";
 
 option csharp_namespace = "AetherFS.Agent.V1";
@@ -20,32 +19,46 @@ message PublishRequest {
   bool sync = 1;
 
   string path = 2;
-  repeated aetherfs.dataset.v1.Tag tags = 3;
+  repeated string tags = 3;
   int32 block_size = 4;
 }
 
-// PublishResponse
+// PublishResponse is returned when the dataset has been published when the operation is synchronous.
 message PublishResponse {
 }
 
 // SubscribeRequest is used to programmatically subscribe to dataset updates. Consumers can use this to get notified of
 // when new versions of datasets become available.
 message SubscribeRequest {
-  aetherfs.dataset.v1.Tag tag = 1;
-  bool cancel = 2;
+  bool sync = 1;
+
+  string path = 2;
+  repeated string tags = 3;
 }
 
-// SubscribeResponse
+// SubscribeResponse returns a mapping of tags to paths where the dataset can be found.
 message SubscribeResponse {
-  aetherfs.dataset.v1.Tag tag = 1;
-  string path = 2;
+  map<string, string> paths = 1;
 }
 
 // GracefulShutdownRequest is used to initiate a graceful shutdown of the agent process. This will wait for all
-// published datasets to be replicated before shutting down.
+// published datasets to be replicated before returning and then shutting down.
 message GracefulShutdownRequest {}
 
+// GracefulShutdownResponse is returned when all
 message GracefulShutdownResponse {}
+
+// WatchSubscriptionRequest wraps the SubscribeRequest for streaming.
+message WatchSubscriptionRequest {
+  SubscribeRequest subscription = 1;
+  bool cancel = 2;
+}
+
+// WatchSubscriptionResponse returns information dynamically when a new version of a dataset becomes available.
+message WatchSubscriptionResponse {
+  SubscribeResponse subscription = 1;
+  bool cancelled = 2;
+}
 
 // AgentAPI defines a set of operations that a client application can perform when speaking to an agent.
 service AgentAPI {
@@ -56,7 +69,12 @@ service AgentAPI {
     };
   }
 
-  rpc Subscribe(stream SubscribeRequest) returns (stream SubscribeResponse) {}
+  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/agent/subscribe"
+      body: "*"
+    };
+  }
 
   rpc GracefulShutdown(GracefulShutdownRequest) returns (GracefulShutdownResponse) {
     option (google.api.http) = {
@@ -64,4 +82,6 @@ service AgentAPI {
       body: "*"
     };
   }
+
+  rpc WatchSubscription(stream WatchSubscriptionRequest) returns (stream WatchSubscriptionResponse) {}
 }

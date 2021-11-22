@@ -79,6 +79,38 @@
           "AgentAPI"
         ]
       }
+    },
+    "/api/v1/agent/subscribe": {
+      "post": {
+        "operationId": "AgentAPI_Subscribe",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SubscribeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SubscribeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AgentAPI"
+        ]
+      }
     }
   },
   "definitions": {
@@ -114,10 +146,11 @@
     },
     "v1GracefulShutdownRequest": {
       "type": "object",
-      "description": "GracefulShutdownRequest is used to initiate a graceful shutdown of the agent process. This will wait for all\npublished datasets to be replicated before shutting down."
+      "description": "GracefulShutdownRequest is used to initiate a graceful shutdown of the agent process. This will wait for all\npublished datasets to be replicated before returning and then shutting down."
     },
     "v1GracefulShutdownResponse": {
-      "type": "object"
+      "type": "object",
+      "title": "GracefulShutdownResponse is returned when all"
     },
     "v1PublishRequest": {
       "type": "object",
@@ -131,7 +164,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Tag"
+            "type": "string"
           }
         },
         "blockSize": {
@@ -143,31 +176,49 @@
     },
     "v1PublishResponse": {
       "type": "object",
-      "title": "PublishResponse"
+      "description": "PublishResponse is returned when the dataset has been published when the operation is synchronous."
+    },
+    "v1SubscribeRequest": {
+      "type": "object",
+      "properties": {
+        "sync": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "SubscribeRequest is used to programmatically subscribe to dataset updates. Consumers can use this to get notified of\nwhen new versions of datasets become available."
     },
     "v1SubscribeResponse": {
       "type": "object",
       "properties": {
-        "tag": {
-          "$ref": "#/definitions/v1Tag"
-        },
-        "path": {
-          "type": "string"
+        "paths": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
-      "title": "SubscribeResponse"
+      "description": "SubscribeResponse returns a mapping of tags to paths where the dataset can be found."
     },
-    "v1Tag": {
+    "v1WatchSubscriptionResponse": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
+        "subscription": {
+          "$ref": "#/definitions/v1SubscribeResponse"
         },
-        "version": {
-          "type": "string"
+        "cancelled": {
+          "type": "boolean"
         }
       },
-      "description": "Tag identifies a version of a dataset in AetherFS."
+      "description": "WatchSubscriptionResponse returns information dynamically when a new version of a dataset becomes available."
     }
   }
 }
