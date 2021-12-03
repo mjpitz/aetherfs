@@ -50,14 +50,8 @@ func main() {
 		Usage:     "A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).",
 		UsageText: "aetherfs [options] <command>",
 		Version:   fmt.Sprintf("%s (%s)", version, commit),
-		Commands: []*cli.Command{
-			commands.Auth(),
-			commands.Pull(),
-			commands.Push(),
-			commands.Run(),
-			commands.Version(),
-		},
-		Flags: flagset.Extract(cfg),
+		Commands:  commands.Available,
+		Flags:     flagset.Extract(cfg),
 		Before: func(ctx *cli.Context) error {
 			ctx.Context = zaputil.Setup(ctx.Context, cfg.Log)
 			ctx.Context = lifecycle.Setup(ctx.Context)
