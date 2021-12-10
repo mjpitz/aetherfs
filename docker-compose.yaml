@@ -4,8 +4,7 @@ services:
   minio:
     image: minio/minio
     ports:
-      - 9000:9000
-      - 9090:9090
+      - "9090:9090"
     command:
       - server
       - /data
@@ -15,7 +14,7 @@ services:
   public-deployment:
     image: ${SKAFFOLD_DEFAULT_REPO:-ghcr.io/mjpitz}/aetherfs
     ports:
-      - 8080:8080
+      - "8080:8080"
     environment:
       STORAGE_DRIVER: s3
       STORAGE_S3_ENDPOINT: minio:9000
@@ -24,11 +23,12 @@ services:
       STORAGE_S3_BUCKET: aetherfs-public-data
     command:
       - run
+      - --web_enable
 
   private-deployment:
     image: ${SKAFFOLD_DEFAULT_REPO:-ghcr.io/mjpitz}/aetherfs
     ports:
-      - 8090:8080
+      - "8090:8080"
     environment:
       STORAGE_DRIVER: s3
       STORAGE_S3_ENDPOINT: minio:9000
@@ -37,3 +37,4 @@ services:
       STORAGE_S3_BUCKET: aetherfs-private-data
     command:
       - run
+      - --web_enable

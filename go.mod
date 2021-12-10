@@ -11,7 +11,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
 	github.com/minio/minio-go/v7 v7.0.15
-	github.com/mjpitz/myago v0.0.0-20211121023353-2c6b00eacd20
+	github.com/mjpitz/myago v0.0.0-20211210164442-ec45c8225dec
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.8.0
 	github.com/spf13/afero v1.6.0

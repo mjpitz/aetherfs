@@ -53,6 +53,9 @@ const configSnapshot = `{
       "region": "",
       "bucket": ""
     }
+  },
+  "web": {
+    "enable": false
   }
 }`
 

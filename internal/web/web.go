@@ -7,6 +7,8 @@ import (
 	"embed"
 	"io/fs"
 	"net/http"
+
+	"github.com/mjpitz/myago/vue"
 )
 
 //nolint:typecheck
@@ -20,5 +22,8 @@ func Handle() http.Handler {
 		panic(err)
 	}
 
-	return http.StripPrefix("/ui/", http.FileServer(http.FS(fs)))
+	httpFS := http.FS(fs)
+	httpFS = vue.Wrap(httpFS)
+
+	return http.StripPrefix("/ui/", http.FileServer(httpFS))
 }

@@ -4,7 +4,7 @@
  */
 
 import {createApp} from 'vue'
-import {createRouter, createWebHashHistory} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 
 import Console from '@/components/Console.vue'
 import DatasetDetails from '@/components/views/DatasetDetails.vue'
@@ -13,7 +13,7 @@ import DatasetOverview from '@/components/views/DatasetOverview.vue'
 import TagDetails from '@/components/views/TagDetails.vue'
 
 const router = createRouter({
-    history: createWebHashHistory(process.env.BASE_URL),
+    history: createWebHistory(process.env.BASE_URL),
     routes: [
         {path: "/", name: "DatasetList", component: DatasetList},
         {

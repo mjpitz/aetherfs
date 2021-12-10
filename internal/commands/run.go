@@ -35,6 +35,7 @@ type RunConfig struct {
 
 	Agent   agent.Config   `json:"agent"`
 	Storage storage.Config `json:"storage"`
+	Web     web.Config     `json:"web"`
 }
 
 // Run returns a command that can execute a given part of the ecosystem.
@@ -128,11 +129,13 @@ func Run() (cmd *cli.Command) {
 				handler.ServeHTTP(ginctx.Writer, ginctx.Request)
 			})
 
-			ginServer.Group("/ui").GET("*path", gin.WrapH(web.Handle()))
+			if cfg.Web.Enable {
+				ginServer.Group("/ui").GET("*path", gin.WrapH(web.Handle()))
 
-			ginServer.GET("/", func(ginctx *gin.Context) {
-				ginctx.Redirect(http.StatusTemporaryRedirect, "/ui")
-			})
+				ginServer.GET("/", func(ginctx *gin.Context) {
+					ginctx.Redirect(http.StatusTemporaryRedirect, "/ui/")
+				})
+			}
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,

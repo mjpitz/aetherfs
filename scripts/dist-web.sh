@@ -29,4 +29,8 @@ elif [[ "${last_platform}" != "${current_platform}" ]]; then
   reinstall
 fi
 
-npm run build
+# only rebuild when there are changes
+if [[ ! -e ../internal/web/dist ]] || [[ $(( $(date +%s -r .) )) -gt $(( $(date +%s -r ../internal/web/dist) )) ]]; then
+  echo "detected web changes, rebuilding"
+  npm run build
+fi

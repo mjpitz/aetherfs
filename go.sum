@@ -400,6 +400,12 @@ github.com/mjpitz/myago v0.0.0-20211120054459-24f1766c8d98 h1:znJoW2ZsdN+jd4YBON
 github.com/mjpitz/myago v0.0.0-20211120054459-24f1766c8d98/go.mod h1:J37+feBEcSuxkn/XnVh1FXNa1QXjdNSyFfIiH70L2wM=
 github.com/mjpitz/myago v0.0.0-20211121023353-2c6b00eacd20 h1:6kljQED02U77BDSUP7paHY5UMgfxCN5+C+1j0UaR8x4=
 github.com/mjpitz/myago v0.0.0-20211121023353-2c6b00eacd20/go.mod h1:J37+feBEcSuxkn/XnVh1FXNa1QXjdNSyFfIiH70L2wM=
+github.com/mjpitz/myago v0.0.0-20211210004302-71b30b16c6cf h1:GciX4tfouxFizFEl8WXT8Et6NiRLC1bvbSa0Lm7Oc5o=
+github.com/mjpitz/myago v0.0.0-20211210004302-71b30b16c6cf/go.mod h1:J37+feBEcSuxkn/XnVh1FXNa1QXjdNSyFfIiH70L2wM=
+github.com/mjpitz/myago v0.0.0-20211210154140-2987e43faae5 h1:gr0VX9lVNgn/K4Z6QLzEpIC+QMAd5d1l5rAz9V4RAtE=
+github.com/mjpitz/myago v0.0.0-20211210154140-2987e43faae5/go.mod h1:J37+feBEcSuxkn/XnVh1FXNa1QXjdNSyFfIiH70L2wM=
+github.com/mjpitz/myago v0.0.0-20211210164442-ec45c8225dec h1:jb4tEM0mHrZo95NNf8BIz7ma9EOXU/9RhREnyYRsB4o=
+github.com/mjpitz/myago v0.0.0-20211210164442-ec45c8225dec/go.mod h1:J37+feBEcSuxkn/XnVh1FXNa1QXjdNSyFfIiH70L2wM=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
