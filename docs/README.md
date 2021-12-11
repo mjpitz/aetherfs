@@ -49,17 +49,17 @@ release schedule.
 
 [calendar versioning]: https://calver.org
 
-### v22.02
+### v22.02 - Upcoming
 
 As the second major release of the AetherFS system, this will include additional security measures and helps simplify
 interaction for end users (provided there's interest in the system).
 
 - New Features
   - [ ] Client Authentication
-  - [ ] Additional Interfaces
+  - [x] Additional Interfaces
     - [x] WebDav
     - [x] NFSv3
-    - [ ] FUSE
+  - [ ]
 - Improvements
   - [ ] Local data storage
   - [ ] Block caching
@@ -74,3 +74,12 @@ This will be the initial release of AetherFS. It includes the "essentials".
 - [x] Command to upload to and tag datasets in AetherFS.
 - [x] Command to download tagged datasets from AetherFS.
 - [x] Minimal web interface.
+
+### v22.06 - Future
+
+- New Features
+  - [ ] Additional Interfaces
+    - [ ] FUSE
+  - [ ]
+- Improvements
+  - [ ]

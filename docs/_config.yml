@@ -1,6 +1,5 @@
 theme: jekyll-theme-minimal
 exclude:
-  - AUTHORS
-  - LICENSE
+  - CNAME
 title: AetherFS
 description: A virtual file system for small to medium sized datasets (MB or GB, not TB or PB).
