@@ -1,12 +1,11 @@
 # Helm
 .cr-release-packages/
 .cr-index/
-/charts/**/Chart.lock
-/charts/**/*.tgz
+/deploy/charts/**/Chart.lock
+/deploy/charts/**/*.tgz
 
 # Go
-/vendor/
 /dist/
-
-aetherfs
-.coverprofile
+/vendor/
+/.coverprofile
+/aetherfs

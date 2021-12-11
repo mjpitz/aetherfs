@@ -31,7 +31,7 @@ docker: .docker
 	docker build . \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:latest \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:$(VERSION) \
-		--file ./docker/aetherfs/Dockerfile
+		--file ./deploy/docker/aetherfs/Dockerfile
 
 docker/devtools: .docker/devtools
 .docker/devtools:
@@ -64,7 +64,7 @@ docker/release:
 		--label "org.opencontainers.image.description=" \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:latest \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/aetherfs:$(VERSION) \
-		--file ./docker/aetherfs/Dockerfile \
+		--file ./deploy/docker/aetherfs/Dockerfile \
 		--push
 
 # actual targets
@@ -74,7 +74,7 @@ lint:
 
 legal: .legal
 .legal:
-	addlicense -f ./legal/header.txt -skip yaml -skip yml docker internal proto scripts web/public web/src
+	addlicense -f ./legal/header.txt -skip yaml -skip yml deploy/docker internal proto scripts web/public web/src
 
 test:
 	go test -v -race -cover -coverprofile=.coverprofile ./...

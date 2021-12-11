@@ -1,4 +1,4 @@
-charts-repo: https://aetherfs.tech/charts/
+charts-repo: https://aetherfs.tech
 owner: mjpitz
 git-repo: aetherfs
 release-name-template: "v{{ .Version }}"
