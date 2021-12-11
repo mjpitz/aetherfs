@@ -13,14 +13,15 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
+	"github.com/mjpitz/aetherfs/internal/afs"
 	"github.com/mjpitz/aetherfs/internal/agent"
 	"github.com/mjpitz/aetherfs/internal/components"
-	"github.com/mjpitz/aetherfs/internal/fs"
 	"github.com/mjpitz/aetherfs/internal/storage"
 	"github.com/mjpitz/aetherfs/internal/web"
 	"github.com/mjpitz/myago/config"
@@ -117,11 +118,11 @@ func Run() (cmd *cli.Command) {
 
 			ginServer.Group("/fs").GET("*path", func(ginctx *gin.Context) {
 				// handle FileServer requests (need to trim prefix)
-				fileSystem := &fs.FileSystem{
+				fileSystem := afero.NewHttpFs(&afs.FileSystem{
 					Context:    ginctx.Request.Context(),
 					BlockAPI:   blockAPI,
 					DatasetAPI: datasetAPI,
-				}
+				})
 
 				handler := http.FileServer(fileSystem)
 				handler = http.StripPrefix("/fs/", handler)

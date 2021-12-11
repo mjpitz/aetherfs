@@ -1,16 +1,18 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
 // See LICENSE for more information.
 
-package fs
+package afs
 
 import (
 	"context"
 	"errors"
 	"io"
 	"io/fs"
-	"net/http"
 	"os"
 	"strings"
+	"syscall"
+
+	"github.com/spf13/afero"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
@@ -26,10 +28,6 @@ type DatasetFile struct {
 	File        *datasetv1.File
 
 	fileOffset int64
-}
-
-func (f *DatasetFile) Close() error {
-	return nil
 }
 
 func min(a, b int64) int64 {
@@ -114,6 +112,15 @@ func (f *DatasetFile) Read(p []byte) (n int, err error) {
 	return bytesRead, err
 }
 
+func (f *DatasetFile) ReadAt(p []byte, off int64) (n int, err error) {
+	_, err = f.Seek(off, io.SeekStart)
+	if err != nil {
+		return 0, err
+	}
+
+	return f.Read(p)
+}
+
 func (f *DatasetFile) Seek(offset int64, whence int) (int64, error) {
 	if f.File == nil {
 		return 0, os.ErrInvalid
@@ -139,7 +146,16 @@ func (f *DatasetFile) Seek(offset int64, whence int) (int64, error) {
 	return next, nil
 }
 
-func (f *DatasetFile) Readdir(count int) ([]fs.FileInfo, error) {
+func (f *DatasetFile) Stat() (os.FileInfo, error) {
+	name := f.CurrentPath[strings.LastIndex(f.CurrentPath, "/")+1:]
+
+	return &fileInfo{
+		name: name,
+		file: f.File,
+	}, nil
+}
+
+func (f *DatasetFile) Readdir(count int) ([]os.FileInfo, error) {
 	seen := make(map[string]bool)
 	var infos []fs.FileInfo
 
@@ -173,13 +189,49 @@ func (f *DatasetFile) Readdir(count int) ([]fs.FileInfo, error) {
 	return infos, nil
 }
 
-func (f *DatasetFile) Stat() (fs.FileInfo, error) {
-	name := f.CurrentPath[strings.LastIndex(f.CurrentPath, "/")+1:]
+func (f *DatasetFile) Readdirnames(count int) ([]string, error) {
+	infos, err := f.Readdir(count)
+	if err != nil {
+		return nil, err
+	}
 
-	return &fileInfo{
-		name: name,
-		file: f.File,
-	}, nil
+	names := make([]string, len(infos))
+	for i, info := range infos {
+		names[i] = info.Name()
+	}
+
+	return names, nil
 }
 
-var _ http.File = &DatasetFile{}
+func (f *DatasetFile) Name() string {
+	info, _ := f.Stat()
+	return info.Name()
+}
+
+func (f *DatasetFile) Sync() error {
+	return nil
+}
+
+func (f *DatasetFile) Close() error {
+	return nil
+}
+
+// unsupported
+
+func (f *DatasetFile) Write(p []byte) (n int, err error) {
+	return 0, syscall.EPERM
+}
+
+func (f *DatasetFile) WriteAt(p []byte, off int64) (n int, err error) {
+	return 0, syscall.EPERM
+}
+
+func (f *DatasetFile) Truncate(size int64) error {
+	return syscall.EPERM
+}
+
+func (f *DatasetFile) WriteString(s string) (ret int, err error) {
+	return 0, syscall.EPERM
+}
+
+var _ afero.File = &DatasetFile{}

@@ -1,10 +1,11 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
 // See LICENSE for more information.
 
-package fs
+package afs
 
 import (
 	"io/fs"
+	"os"
 	"time"
 
 	datasetv1 "github.com/mjpitz/aetherfs/api/aetherfs/dataset/v1"
@@ -51,4 +52,4 @@ func (f *fileInfo) Sys() interface{} {
 	return nil
 }
 
-var _ fs.FileInfo = &fileInfo{}
+var _ os.FileInfo = &fileInfo{}

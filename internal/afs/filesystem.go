@@ -1,15 +1,17 @@
 // Copyright (C) The AetherFS Authors - All Rights Reserved
 // See LICENSE for more information.
 
-package fs
+package afs
 
 import (
 	"context"
-	"net/http"
 	"os"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
@@ -23,8 +25,21 @@ type FileSystem struct {
 	DatasetAPI datasetv1.DatasetAPIClient
 }
 
+func (f *FileSystem) Name() string {
+	return "AetherFS"
+}
+
+func (f *FileSystem) Stat(name string) (os.FileInfo, error) {
+	file, err := f.Open(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return file.Stat()
+}
+
 // openDatasetList renders top level nodes that list datasets within the File system.
-func (f *FileSystem) openDatasetList(scope string) (http.File, error) {
+func (f *FileSystem) openDatasetList(scope string) (afero.File, error) {
 	listResp, err := f.DatasetAPI.List(f.Context, &datasetv1.ListRequest{})
 	if err != nil {
 		return nil, translateError(err)
@@ -52,7 +67,7 @@ func (f *FileSystem) openDatasetList(scope string) (http.File, error) {
 }
 
 // openTagList renders the list of tags for the provided dataset.
-func (f *FileSystem) openTagList(scope, dataset string) (http.File, error) {
+func (f *FileSystem) openTagList(scope, dataset string) (afero.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
@@ -72,7 +87,7 @@ func (f *FileSystem) openTagList(scope, dataset string) (http.File, error) {
 }
 
 // openDatasetFile renders a files within a given tagged dataset.
-func (f *FileSystem) openDatasetFile(scope, dataset, tag, filePath string) (http.File, error) {
+func (f *FileSystem) openDatasetFile(scope, dataset, tag, filePath string) (afero.File, error) {
 	if scope != "" {
 		dataset = scope + "/" + dataset
 	}
@@ -114,11 +129,7 @@ func (f *FileSystem) openDatasetFile(scope, dataset, tag, filePath string) (http
 	return nil, os.ErrNotExist
 }
 
-// Open is called with the full DatasetFile path
-// 1.631977188164028e+09   info    daemons/filesystem.go:18        open    {"name": "/test"}
-// 1.631977204080589e+09   info    daemons/filesystem.go:18        open    {"name": "/test/path"}
-// 1.6319772103438861e+09  info    daemons/filesystem.go:18        open    {"name": "/test/path.jpg"}
-func (f *FileSystem) Open(name string) (http.File, error) {
+func (f *FileSystem) Open(name string) (afero.File, error) {
 	var parts []string
 
 	// in some cases, go will append index.html to a file
@@ -172,4 +183,49 @@ func (f *FileSystem) Open(name string) (http.File, error) {
 	return f.openDatasetFile(scope, dataset, tag, filePath)
 }
 
-var _ http.FileSystem = &FileSystem{}
+func (f *FileSystem) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
+	mask := os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREATE | os.O_TRUNC
+	if flag&mask != 0 {
+		return nil, syscall.EPERM
+	}
+
+	return f.Open(name)
+}
+
+// unsupported, not read only
+
+func (f *FileSystem) Mkdir(name string, perm os.FileMode) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) MkdirAll(path string, perm os.FileMode) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) Create(name string) (afero.File, error) {
+	return nil, syscall.EPERM
+}
+
+func (f *FileSystem) Remove(name string) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) RemoveAll(path string) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) Rename(oldname, newname string) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) Chmod(name string, mode os.FileMode) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) Chown(name string, uid, gid int) error {
+	return syscall.EPERM
+}
+
+func (f *FileSystem) Chtimes(name string, atime time.Time, mtime time.Time) error {
+	return syscall.EPERM
+}
