@@ -143,10 +143,24 @@ func Run() (cmd *cli.Command) {
 				cfg.HTTPServerConfig,
 				http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 					// split grpc here to avoid duplicate prometheus metrics
-					if request.ProtoMajor == 2 &&
-						strings.HasPrefix(request.Header.Get("Content-Type"), "application/grpc") {
+					switch {
+					case request.ProtoMajor == 2 &&
+						strings.HasPrefix(request.Header.Get("Content-Type"), "application/grpc"):
 						grpcServer.ServeHTTP(writer, request)
-					} else {
+
+					case strings.HasPrefix(request.URL.Path, "/webdav"):
+						// webdav has to be done here for custom HTTP methods
+						fileSystem := &afs.FileSystem{
+							Context:    request.Context(),
+							BlockAPI:   blockAPI,
+							DatasetAPI: datasetAPI,
+						}
+
+						handler := afs.Webdav(fileSystem)
+						handler.Prefix = "/webdav"
+
+						handler.ServeHTTP(writer, request)
+					default:
 						ginServer.ServeHTTP(writer, request)
 					}
 				}),
