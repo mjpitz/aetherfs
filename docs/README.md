@@ -28,7 +28,7 @@ This project is under active development. The lists below detail aspirational fe
   - [Architecture Document](https://github.com/mjpitz/aetherfs/wiki/Architecture)
   - [General Wiki](https://github.com/mjpitz/aetherfs/wiki)
 - Features
-  - HTTP file server for ease of interaction
+  - HTTP, WebDav, and NFS file server interfaces for ease of interaction
   - REST and gRPC APIs for programmatic interaction
   - Optional agent that can manage a shared or FUSE file system
   - Efficiently persist and query information stored in [AWS S3][]
@@ -49,23 +49,28 @@ release schedule.
 
 [calendar versioning]: https://calver.org
 
-### v21.10
-
-This will be the initial release of AetherFS. It includes the "essentials".
-
-- Single binary containing all components.
-- Command to run an AetherFS data hub.
-- Command to upload to and tag datasets in AetherFS.
-- Command to download tagged datasets from AetherFS.
-- Minimal web interface.
-
 ### v22.02
 
 As the second major release of the AetherFS system, this will include additional security measures and helps simplify
 interaction for end users (provided there's interest in the system).
 
-- Command to run an agent process with a FUSE file system.
-- Block caching to improve performance and usage of S3.
-- Command to authenticate clients.
-- Enforce access controls around datasets.
-- Data encrypted in transit.
+- New Features
+  - [ ] Client Authentication
+  - [ ] Additional Interfaces
+    - [x] WebDav
+    - [x] NFSv3
+    - [ ] FUSE
+- Improvements
+  - [ ] Local data storage
+  - [ ] Block caching
+  - [ ] Data encrypted in transit
+
+### v21.10 - Released
+
+This will be the initial release of AetherFS. It includes the "essentials".
+
+- [x] Single binary containing all components.
+- [x] Command to run an AetherFS data hub.
+- [x] Command to upload to and tag datasets in AetherFS.
+- [x] Command to download tagged datasets from AetherFS.
+- [x] Minimal web interface.
