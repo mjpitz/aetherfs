@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	blockv1 "github.com/mjpitz/aetherfs/api/aetherfs/block/v1"
@@ -26,6 +26,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/web"
 	"github.com/mjpitz/myago/config"
 	"github.com/mjpitz/myago/flagset"
+	"github.com/mjpitz/myago/zaputil"
 )
 
 type RunConfig struct {
@@ -34,9 +35,10 @@ type RunConfig struct {
 	components.HTTPServerConfig
 	components.GRPCServerConfig
 
-	Agent   agent.Config   `json:"agent"`
-	Storage storage.Config `json:"storage"`
-	Web     web.Config     `json:"web"`
+	NFS     components.NFSServerConfig `json:"nfs"`
+	Agent   agent.Config               `json:"agent"`
+	Storage storage.Config             `json:"storage"`
+	Web     web.Config                 `json:"web"`
 }
 
 // Run returns a command that can execute a given part of the ecosystem.
@@ -70,6 +72,8 @@ func Run() (cmd *cli.Command) {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
+			log := zaputil.Extract(ctx.Context)
+
 			serverConn, err := components.GRPCClient(ctx.Context, components.GRPCClientConfig{
 				Target: fmt.Sprintf("localhost:%d", cfg.HTTPServerConfig.Port),
 				TLS:    cfg.HTTPServerConfig.TLS,
@@ -97,9 +101,11 @@ func Run() (cmd *cli.Command) {
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
 
 			if cfg.Agent.Enable {
+				log.Info("enabling", zap.Strings("components", []string{"agent"}))
 				agentService := &agent.Service{}
 
 				if cfg.Agent.Shutdown.Enable {
+					log.Info("enabling shutdown", zap.Strings("components", []string{"agent"}))
 					ctx.Context, agentService.InitiateShutdown = context.WithCancel(ctx.Context)
 				}
 
@@ -131,12 +137,30 @@ func Run() (cmd *cli.Command) {
 			})
 
 			if cfg.Web.Enable {
+				log.Info("enabling", zap.Strings("components", []string{"web"}))
+
 				ginServer.Group("/ui").GET("*path", gin.WrapH(web.Handle()))
 
 				ginServer.GET("/", func(ginctx *gin.Context) {
 					ginctx.Redirect(http.StatusTemporaryRedirect, "/ui/")
 				})
 			}
+
+			if cfg.NFS.Enable {
+				log.Info("enabling",
+					zap.Strings("components", []string{"nfs"}),
+					zap.Int("port", cfg.NFS.Port))
+
+				err = components.ListenAndServeNFS(ctx.Context, cfg.NFS, &afs.FileSystem{
+					Context:    ctx.Context,
+					BlockAPI:   blockAPI,
+					DatasetAPI: datasetAPI,
+				})
+			}
+
+			log.Info("enabling",
+				zap.Strings("components", []string{"http", "grpc"}),
+				zap.Int("port", cfg.HTTPServerConfig.Port))
 
 			err = components.ListenAndServeHTTP(
 				ctx.Context,
@@ -170,7 +194,7 @@ func Run() (cmd *cli.Command) {
 				return err
 			}
 
-			ctxzap.Extract(ctx.Context).Info("running aetherfs")
+			log.Info("running aetherfs")
 			<-ctx.Done()
 			return nil
 		},
