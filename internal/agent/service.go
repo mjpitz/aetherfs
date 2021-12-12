@@ -19,8 +19,10 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/spf13/afero"
+	"github.com/zalando/go-keyring"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -35,6 +37,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/dataset"
 	"github.com/mjpitz/aetherfs/internal/headers"
+	"github.com/mjpitz/aetherfs/internal/storage/local"
 	"github.com/mjpitz/myago/clocks"
 	"github.com/mjpitz/myago/vfs"
 	"github.com/mjpitz/myago/zaputil"
@@ -48,19 +51,32 @@ const (
 type Service struct {
 	agentv1.UnsafeAgentAPIServer
 
+	Authentications  *local.Authentications
 	InitiateShutdown func()
 
 	ongoing  int32
 	shutdown int32
 }
 
+func (s *Service) connectionFor(ctx context.Context, host string) (*grpc.ClientConn, error) {
+	credentials, err := s.Authentications.Get(ctx, host)
+	switch {
+	case errors.Is(err, keyring.ErrNotFound):
+		credentials = &local.Credentials{
+			GRPCClientConfig: components.GRPCClientConfig{
+				Target: host,
+			},
+		}
+	case err != nil:
+		return nil, err
+	}
+
+	return components.GRPCClient(ctx, credentials.GRPCClientConfig)
+}
+
 // this really needs to get broken up into some smaller methods
 func (s *Service) publish(ctx context.Context, root string, host string, request *datasetv1.PublishRequest) error {
-	// TODO: translate host to credentials
-
-	conn, err := components.GRPCClient(ctx, components.GRPCClientConfig{
-		Target: host,
-	})
+	conn, err := s.connectionFor(ctx, host)
 	if err != nil {
 		return err
 	}
@@ -289,11 +305,7 @@ func (s *Service) Publish(ctx context.Context, request *agentv1.PublishRequest) 
 }
 
 func (s *Service) subscribe(ctx context.Context, host string, tags []*datasetv1.Tag, aetherFSDir string, resp *agentv1.SubscribeResponse) error {
-	// TODO: translate host to credentials
-
-	conn, err := components.GRPCClient(ctx, components.GRPCClientConfig{
-		Target: host,
-	})
+	conn, err := s.connectionFor(ctx, host)
 	if err != nil {
 		return err
 	}

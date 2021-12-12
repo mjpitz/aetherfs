@@ -23,6 +23,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/agent"
 	"github.com/mjpitz/aetherfs/internal/components"
 	"github.com/mjpitz/aetherfs/internal/storage"
+	"github.com/mjpitz/aetherfs/internal/storage/local"
 	"github.com/mjpitz/aetherfs/internal/web"
 	"github.com/mjpitz/myago/config"
 	"github.com/mjpitz/myago/flagset"
@@ -102,7 +103,9 @@ func Run() (cmd *cli.Command) {
 
 			if cfg.Agent.Enable {
 				log.Info("enabling", zap.Strings("components", []string{"agent"}))
-				agentService := &agent.Service{}
+				agentService := &agent.Service{
+					Authentications: &local.Authentications{},
+				}
 
 				if cfg.Agent.Shutdown.Enable {
 					log.Info("enabling shutdown", zap.Strings("components", []string{"agent"}))

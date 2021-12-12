@@ -12,6 +12,7 @@ import (
 
 	agentv1 "github.com/mjpitz/aetherfs/api/aetherfs/agent/v1"
 	"github.com/mjpitz/aetherfs/internal/agent"
+	"github.com/mjpitz/aetherfs/internal/storage/local"
 	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/zaputil"
 )
@@ -23,6 +24,10 @@ type PullConfig struct {
 // Pull returns a command that downloads datasets from upstream servers
 func Pull() *cli.Command {
 	cfg := &PullConfig{}
+
+	agentService := &agent.Service{
+		Authentications: &local.Authentications{},
+	}
 
 	return &cli.Command{
 		Name:  "pull",
@@ -55,7 +60,7 @@ func Pull() *cli.Command {
 
 			zaputil.Extract(ctx.Context).Debug("subscribe", zap.Stringer("request", subscribeRequest))
 
-			_, err = (&agent.Service{}).Subscribe(ctx.Context, subscribeRequest)
+			_, err = agentService.Subscribe(ctx.Context, subscribeRequest)
 
 			return err
 		},

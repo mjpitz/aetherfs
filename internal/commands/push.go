@@ -14,6 +14,7 @@ import (
 	"github.com/mjpitz/aetherfs/internal/agent"
 	"github.com/mjpitz/aetherfs/internal/blocks"
 	"github.com/mjpitz/aetherfs/internal/dataset"
+	"github.com/mjpitz/aetherfs/internal/storage/local"
 	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/zaputil"
 )
@@ -28,6 +29,10 @@ type PushConfig struct {
 func Push() *cli.Command {
 	cfg := &PushConfig{
 		BlockSize: 256,
+	}
+
+	agentService := &agent.Service{
+		Authentications: &local.Authentications{},
 	}
 
 	return &cli.Command{
@@ -61,7 +66,7 @@ func Push() *cli.Command {
 
 			zaputil.Extract(ctx.Context).Debug("publish", zap.Stringer("request", publishRequest))
 
-			_, err = (&agent.Service{}).Publish(ctx.Context, publishRequest)
+			_, err = agentService.Publish(ctx.Context, publishRequest)
 
 			return err
 		},
