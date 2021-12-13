@@ -1,0 +1,13 @@
+apiVersion: v2
+type: application
+name: aetherfs-datasets
+description: Configures an NFS Volume for mounting datasets from AetherFS
+home: https://aetherfs.tech
+sources:
+  - https://github.com/mjpitz/aetherfs
+maintainers:
+  - name: Mya Pitzeruse
+    email: j.mya.pitz@gmail.com
+version: "0.0.0"
+appVersion: "latest"
+dependencies: []

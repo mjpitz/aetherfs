@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "aetherfs-datasets.fullname" . }}
+  labels:
+    {{- include "aetherfs-datasets.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadOnlyMany
+  capacity:
+    storage: 1Mi
+  nfs:
+    path: /mount
+    server: {{ .Values.server }}
+    readOnly: true
+  mountOptions:
+    - port=2049
+    - mountport=2049
+    - nfsvers=3
+    - noacl
+    - tcp

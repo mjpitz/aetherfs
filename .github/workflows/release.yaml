@@ -120,6 +120,7 @@ jobs:
       - name: Package
         run: |
           cr package charts/aetherfs-hub
+          cr package charts/aetherfs-datasets
           cr package charts/aetherfs
 
       - name: Upload

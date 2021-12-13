@@ -11,5 +11,11 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{- if .Values.nfs.enabled }}
+    - port: 2049
+      targetPort: nfs
+      protocol: TCP
+      name: nfs
+    {{- end }}
   selector:
     {{- include "aetherfs-hub.selectorLabels" . | nindent 4 }}

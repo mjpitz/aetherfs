@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aetherfs-datasets.fullname" . }}
+  labels:
+    {{- include "aetherfs-datasets.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 1Mi
+  storageClassName: ""

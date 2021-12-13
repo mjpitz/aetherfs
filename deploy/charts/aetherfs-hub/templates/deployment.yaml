@@ -36,6 +36,9 @@ spec:
           args:
             - run
             - --web_enable
+            {{- if .Values.nfs.enabled }}
+            - --nfs_enable
+            {{- end }}
           {{- with .Values.env }}
           env:
             {{- toYaml . | nindent 12 }}
@@ -44,6 +47,11 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+            {{- if .Values.nfs.enabled }}
+            - name: nfs
+              containerPort: 2049
+              protocol: TCP
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
