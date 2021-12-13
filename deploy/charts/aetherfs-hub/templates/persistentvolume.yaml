@@ -1,0 +1,34 @@
+{{- if .Values.nfs.volume.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "aetherfs-hub.fullname" . }}-artifacts
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadOnlyMany
+  nfs:
+    path: /mount
+    server: {{ include "aetherfs-hub.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    readOnly: true
+  mountOptions:
+    - port=2049
+    - mountport=2049
+    - nfsvers=3
+    - noacl
+    - tcp
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aetherfs-hub.fullname" . }}-artifacts
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: ""
+{{- end }}

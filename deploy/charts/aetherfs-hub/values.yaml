@@ -79,3 +79,10 @@ tolerations: []
 affinity: {}
 
 env: []
+
+nfs:
+  enabled: true
+
+  volume:
+    # enabled - creates a global read-only persistent volume using nfs for use by all applications.
+    enabled: true

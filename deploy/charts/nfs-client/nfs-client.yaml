@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-client
+spec:
+  volumes:
+    - name: aetherfs-hub-artifacts
+      persistentVolumeClaim:
+        claimName: aetherfs-hub-artifacts
+        readOnly: true
+  containers:
+    - name: main
+      image: busybox
+      volumeMounts:
+        - mountPath: /var/artifacts
+          name: aetherfs-hub-artifacts
