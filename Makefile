@@ -35,7 +35,7 @@ docker: .docker
 
 docker/devtools: .docker/devtools
 .docker/devtools:
-	docker build ./docker/devtools -t $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools
+	docker build ./deploy/docker/devtools -t $(SKAFFOLD_DEFAULT_REPO)/aetherfs-devtools
 
 in-docker:
 	docker run --rm -i \
