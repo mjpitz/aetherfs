@@ -42,6 +42,8 @@ securityContext: {}
 service:
   # -- The type of service to create.
   type: ClusterIP
+  # -- Request a specific service IP address for use in the cluster, or None for a headless mode.
+  clusterIP: ""
   # -- The port to advertise the service on.
   port: 80
 

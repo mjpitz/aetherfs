@@ -9,6 +9,7 @@ spec:
     - ReadOnlyMany
   capacity:
     storage: 1Mi
+  persistentVolumeReclaimPolicy: Delete
   nfs:
     path: /mount
     server: {{ .Values.nfs.server }}

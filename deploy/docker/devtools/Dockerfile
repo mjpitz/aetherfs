@@ -24,18 +24,9 @@ RUN curl -sSLo node.tar.xz https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE
 
 ENV PATH="/usr/local/go/bin:/usr/local/protoc/bin:/usr/local/node/bin:${PATH}"
 
-ENV GO111MODULE=on
+RUN npm install -g prettier
 
-RUN GOBIN=/usr/local/bin go get \
-    github.com/bufbuild/buf/cmd/buf@v0.54.1 \
-    github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@v0.54.1 \
-    github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@v0.54.1 \
-    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.5.0 \
-    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.5.0 \
-    google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
-    google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0 \
-    github.com/envoyproxy/protoc-gen-validate@v0.6.1 \
-    moul.io/protoc-gen-gotemplate@v1.11.2 \
-    github.com/google/addlicense@v1.0.0 \
-    github.com/goreleaser/goreleaser@v0.177.0 \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 \
+ENV GO111MODULE=on
+ENV GOBIN=/usr/local/bin
+COPY godeps.txt godeps.txt
+RUN cat godeps.txt | xargs -I{} go install {}

@@ -72,6 +72,11 @@ docker/release:
 lint:
 	./scripts/lint.sh
 
+docs: .docs
+.docs:
+	helm-docs -c deploy/charts/aetherfs-datasets --dry-run | prettier --parser markdown > deploy/charts/aetherfs-datasets/README.md
+	helm-docs -c deploy/charts/aetherfs-hub --dry-run | prettier --parser markdown > deploy/charts/aetherfs-hub/README.md
+
 legal: .legal
 .legal:
 	addlicense -f ./legal/header.txt -skip yaml -skip yml deploy/docker internal proto scripts web/public web/src

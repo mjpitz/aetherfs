@@ -1,0 +1,51 @@
+# AetherFS Datasets
+
+This chart makes it easy to mount an [AetherFS hub] deployment using an NFS volume mount. Since data provided over the
+NFS interface is read only, any number of pods can mount this volume.
+
+[AetherFS hub]: https://github.com/mjpitz/aetherfs/tree/main/deploy/charts/aetherfs-hub
+
+## Introduction
+
+This chart bootstraps an {{ template "chart.name" . }} deployment on a [Kubernetes] cluster using the [Helm] package
+manager.
+
+[Kubernetes]: https://kubernetes.io
+[Helm]: https://helm.sh
+
+Current chart version is `{{ template "chart.version" . }}`
+
+{{ template "chart.sourcesSection" . }}
+
+## Installing the Chart
+
+While this chart can be installed directly with helm, it's intended to be added as a dependency:
+
+```yaml
+# In requirements.yaml for v1 charts
+# In Chart.yaml for v2 charts
+dependencies:
+- repository: http://aetherfs.tech
+  name: {{ template "chart.name" . }}
+  version: {{ template "chart.version" . }}
+  condition: {{ template "chart.name" . }}.enabled
+```
+
+This will automatically create a `ReadOnlyMany` [PersistentVolume] and [PersistentVolumeClaim] that your Deployment,
+DaemonSet, or StatefulSet can mount.
+
+[PersistentVolume]: #tbd
+[PersistentVolumeClaim]: #tbd
+
+## Uninstalling the Chart
+
+To uninstall, simply remove the dependency and Helm should automatically clean itself up.
+
+{{ template "chart.requirementsSection" . }}
+
+## Parameters
+
+The following table lists the configurable parameters of the {{ template "chart.name" . }} chart and their default
+values.
+
+{{ template "chart.valuesTable" . }}

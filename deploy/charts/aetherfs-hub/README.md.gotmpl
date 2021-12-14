@@ -1,0 +1,49 @@
+# AetherFS
+
+An [AetherFS] hub deployment consists of a replicated set of nodes that provide the core interfaces as well as a web
+interface. An ingress expose the service to your own private network (or the world).
+
+[AetherFS]: https://aetherfs.tech
+
+## Introduction
+
+This chart bootstraps an {{ template "chart.name" . }} deployment on a [Kubernetes] cluster using the [Helm] package manager.
+
+[Kubernetes]: https://kubernetes.io
+[Helm]: https://helm.sh
+
+Current chart version is `{{ template "chart.version" . }}`
+
+{{ template "chart.sourcesSection" . }}
+
+## Installing the Chart
+
+To install the chart with the release name `{{ template "chart.name" . }}`:
+
+```bash
+$ helm repo add aetherfs https://aetherfs.tech
+$ helm install {{ template "chart.name" . }} aetherfs/{{ template "chart.name" . }}
+```
+
+The command deploys {{ template "chart.name" . }} on the Kubernetes cluster using the default configuration.
+The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+
+> **Tip**: List all releases using `helm search repo --versions`
+
+## Uninstalling the Chart
+
+To uninstall/delete the `{{ template "chart.name" . }}` deployment:
+
+```bash
+$ helm delete {{ template "chart.name" . }}
+```
+
+The command removes all the Kubernetes components associated with the chart and deletes the release.
+
+{{ template "chart.requirementsSection" . }}
+
+## Parameters
+
+The following table lists the configurable parameters of the {{ template "chart.name" . }} chart and their default values.
+
+{{ template "chart.valuesTable" . }}
