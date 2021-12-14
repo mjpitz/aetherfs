@@ -11,11 +11,11 @@ spec:
     storage: 1Mi
   nfs:
     path: /mount
-    server: {{ .Values.server }}
+    server: {{ .Values.nfs.server }}
     readOnly: true
   mountOptions:
-    - port=2049
-    - mountport=2049
+    - port={{ .Values.nfs.port }}
+    - mountport={{ .Values.nfs.port }}
     - nfsvers=3
     - noacl
     - tcp

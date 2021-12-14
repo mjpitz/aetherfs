@@ -2,12 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- The number of instances to run.
 replicaCount: 1
 
 image:
   repository: ghcr.io/mjpitz/aetherfs
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
 imagePullSecrets: []
@@ -15,19 +15,22 @@ nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created.
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account.
   annotations: {}
-  # The name of the service account to use.
+  # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to provide directly to the pod.
 podAnnotations: {}
 
+# -- The security context to provide to the pod.
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The security context to apply specifically the aetherfs-hub container.
 securityContext: {}
   # capabilities:
   #   drop:
@@ -37,21 +40,31 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- The type of service to create.
   type: ClusterIP
+  # -- The port to advertise the service on.
   port: 80
 
 ingress:
+  # -- Whether to enable an ingress address for the hub.
   enabled: false
+  # -- Annotations to add to the ingress class.
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: chart-example.local
+    - # -- The name for the service.
+      host: chart-example.local
+      # -- What paths are exposed.
       paths: []
-  tls: []
+  # ingress.tls[0].secretName -- The name of the secret containing TLS certificates.
+  # ingress.tls[0].hosts -- A list of hosts the TLS certificate is valid for.
+  #
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+  #
+  tls: []
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -66,23 +79,29 @@ resources: {}
   #   memory: 128Mi
 
 autoscaling:
+  # -- Whether to enable autoscaling for this deployment.
   enabled: false
+  # -- The minimum number of replicas to scale down to.
   minReplicas: 1
+  # -- The maximum number of replicas to deploy.
   maxReplicas: 100
+  # -- What CPU percentage we should scale up at.
   targetCPUUtilizationPercentage: 80
+  # autoscaling.targetMemoryUtilizationPercentage -- What Memory percentage we should scale up at.
   # targetMemoryUtilizationPercentage: 80
 
+# -- Limit node selection to nodes with the matching set of labels.
 nodeSelector: {}
 
+# -- Configure rules that allow pods to run on tainted nodes. For example, running on control plane nodes.
 tolerations: []
 
+# -- Provide scheduling preferences for pods when they are being considered for placement.
 affinity: {}
 
+# -- Specify environment variables used to configure other portions of the application.
 env: []
 
 nfs:
+  # -- Deploys the nfs server.
   enabled: false
-
-  volume:
-    # enabled - creates a global read-only persistent volume using nfs for use by all applications.
-    enabled: true

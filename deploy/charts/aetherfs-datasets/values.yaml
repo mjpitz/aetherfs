@@ -1,1 +1,5 @@
-server: ""
+nfs:
+  # -- The ip or dns name for the nfs server.
+  server: ""
+  # -- The port the nfs server is bound to.
+  port: 2049
