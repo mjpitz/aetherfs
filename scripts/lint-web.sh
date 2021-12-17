@@ -4,10 +4,6 @@
 
 set -e -o pipefail
 
-golangci-lint run --fix
-
-ct lint
-
 cd web
 
 current_platform="$(uname -s)-$(uname -m)"

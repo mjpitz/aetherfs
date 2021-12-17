@@ -70,7 +70,9 @@ docker/release:
 # actual targets
 
 lint:
-	./scripts/lint.sh
+	./scripts/lint-web.sh
+	./scripts/lint-go.sh
+	./scripts/lint-helm.sh
 
 docs: .docs
 .docs:
