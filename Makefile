@@ -74,8 +74,8 @@ lint:
 
 docs: .docs
 .docs:
-	helm-docs -c deploy/charts/aetherfs-datasets --dry-run | prettier --parser markdown > deploy/charts/aetherfs-datasets/README.md
-	helm-docs -c deploy/charts/aetherfs-hub --dry-run | prettier --parser markdown > deploy/charts/aetherfs-hub/README.md
+	helm-docs -c deploy/helm/aetherfs-datasets --dry-run | prettier --parser markdown > deploy/helm/aetherfs-datasets/README.md
+	helm-docs -c deploy/helm/aetherfs-hub --dry-run | prettier --parser markdown > deploy/helm/aetherfs-hub/README.md
 
 legal: .legal
 .legal:

@@ -87,11 +87,11 @@ jobs:
         shell: bash
         run: |
           export VERSION="\"${GITHUB_REF##*/v}\""
-          yq e ".version = ${VERSION}" -i ./charts/aetherfs-hub/Chart.yaml
-          yq e ".appVersion = ${VERSION}" -i ./charts/aetherfs-hub/Chart.yaml
-          yq e ".version = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
-          yq e ".appVersion = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
-          yq e ".dependencies[0].version = ${VERSION}" -i ./charts/aetherfs/Chart.yaml
+          yq e ".version = ${VERSION}" -i ./deply/helm/aetherfs-hub/Chart.yaml
+          yq e ".appVersion = ${VERSION}" -i ./deply/helm/aetherfs-hub/Chart.yaml
+          yq e ".version = ${VERSION}" -i ./deply/helm/aetherfs/Chart.yaml
+          yq e ".appVersion = ${VERSION}" -i ./deply/helm/aetherfs/Chart.yaml
+          yq e ".dependencies[0].version = ${VERSION}" -i ./deply/helm/aetherfs/Chart.yaml
 
       # TODO: Setup GPG signing
       # - name: Prepare GPG key
@@ -119,9 +119,9 @@ jobs:
       # chart-releaser has some minor headaches when tags already exist at commit.
       - name: Package
         run: |
-          cr package charts/aetherfs-hub
-          cr package charts/aetherfs-datasets
-          cr package charts/aetherfs
+          cr package deploy/helm/aetherfs-hub
+          cr package deploy/helm/aetherfs-datasets
+          cr package deploy/helm/aetherfs
 
       - name: Upload
         uses: softprops/action-gh-release@v1

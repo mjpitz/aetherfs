@@ -1,8 +1,8 @@
 # Helm
 .cr-release-packages/
 .cr-index/
-/deploy/charts/**/Chart.lock
-/deploy/charts/**/*.tgz
+/deploy/helm/**/Chart.lock
+/deploy/helm/**/*.tgz
 
 # Go
 /dist/

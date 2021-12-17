@@ -3,7 +3,7 @@
 This chart makes it easy to mount an [AetherFS hub] deployment using an NFS volume mount. Since data provided over the
 NFS interface is read only, any number of pods can mount this volume.
 
-[aetherfs hub]: https://github.com/mjpitz/aetherfs/tree/main/deploy/charts/aetherfs-hub
+[aetherfs hub]: https://github.com/mjpitz/aetherfs/tree/main/deploy/helm/aetherfs-hub
 
 ## Introduction
 

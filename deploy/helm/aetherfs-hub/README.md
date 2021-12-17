@@ -1,7 +1,7 @@
 # AetherFS
 
 An [AetherFS] hub deployment consists of a replicated set of nodes that provide the core interfaces as well as a web
-interface. An ingress can expose the service to your own private network (or the world).
+interface. An ingress expose the service to your own private network (or the world).
 
 [aetherfs]: https://aetherfs.tech
 

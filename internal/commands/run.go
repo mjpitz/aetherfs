@@ -159,6 +159,9 @@ func Run() (cmd *cli.Command) {
 					BlockAPI:   blockAPI,
 					DatasetAPI: datasetAPI,
 				})
+				if err != nil {
+					return err
+				}
 			}
 
 			log.Info("enabling",

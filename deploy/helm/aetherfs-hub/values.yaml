@@ -55,7 +55,8 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - # -- The name for the service.
+    -
+      # -- The name for the service.
       host: chart-example.local
       # -- What paths are exposed.
       paths: []
