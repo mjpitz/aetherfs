@@ -18,9 +18,6 @@ job "aetherfs-us" {
     }
   }
 
-  region = "us"
-  datacenters = [ "sfo3", "nyc3" ]
-
   // group "canary" { ... }
 
   group "main" {
