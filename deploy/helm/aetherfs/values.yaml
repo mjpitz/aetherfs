@@ -4,6 +4,10 @@ aetherfs-hub:
   fullnameOverride: "aetherfs-hub"
 
   env:
+    - name: AUTH_TYPE
+      value: "oidc"
+    - name: OIDC_ISSUER_SERVER_URL
+      value: "http://dex:5556"
     - name: STORAGE_DRIVER
       value: "s3"
     - name: STORAGE_S3_ENDPOINT
@@ -16,7 +20,39 @@ aetherfs-hub:
       value: "aetherfs-data"
 
 dex:
-  enabled: false
+  enabled: true
+
+  config:
+    issuer: http://localhost:5556
+
+    frontend:
+      issuer: AetherFS
+      theme: dark
+
+    storage:
+      type: sqlite3
+      config:
+        file: ":memory:"
+
+    connectors:
+      - id: mock
+        name: Example
+        type: mockCallback
+
+    staticClients:
+      - name: 'AetherFS'
+        id: 003645E5-3D41-4B6C-813B-74E422475BEE
+        secret: BEEF76F6-460A-4D39-B8C5-DFAF696A2AD8
+        redirectURIs:
+          - 'http://localhost:23843/callback'
+          - 'http://localhost:8080/ui/callback'
+
+    enablePasswordDB: true
+    staticPasswords:
+      - email: "admin@aetherfs.tech"
+        hash: "$2y$10$hldTTPzEsvVMcZlSx7KQIeOnu3LNqt6BZsNQaweul40i81o9KEKTW"
+        username: "admin"
+        userID: "430D8A58-53EF-4DD8-93F1-D818AC18010E"
 
 minio:
   enabled: true

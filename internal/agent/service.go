@@ -51,7 +51,7 @@ const (
 type Service struct {
 	agentv1.UnsafeAgentAPIServer
 
-	Authentications  *local.Authentications
+	Credentials      *local.Store
 	InitiateShutdown func()
 
 	ongoing  int32
@@ -59,19 +59,19 @@ type Service struct {
 }
 
 func (s *Service) connectionFor(ctx context.Context, host string) (*grpc.ClientConn, error) {
-	credentials, err := s.Authentications.Get(ctx, host)
+	cfg := components.GRPCClientConfig{}
+
+	err := s.Credentials.Get(ctx, host, &cfg)
 	switch {
 	case errors.Is(err, keyring.ErrNotFound):
-		credentials = &local.Credentials{
-			GRPCClientConfig: components.GRPCClientConfig{
-				Target: host,
-			},
+		cfg = components.GRPCClientConfig{
+			Target: host,
 		}
 	case err != nil:
 		return nil, err
 	}
 
-	return components.GRPCClient(ctx, credentials.GRPCClientConfig)
+	return components.GRPCClient(ctx, cfg)
 }
 
 // this really needs to get broken up into some smaller methods

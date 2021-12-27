@@ -25,10 +25,6 @@ type PullConfig struct {
 func Pull() *cli.Command {
 	cfg := &PullConfig{}
 
-	agentService := &agent.Service{
-		Authentications: &local.Authentications{},
-	}
-
 	return &cli.Command{
 		Name:  "pull",
 		Usage: "Pulls a dataset from AetherFS",
@@ -59,6 +55,10 @@ func Pull() *cli.Command {
 			}
 
 			zaputil.Extract(ctx.Context).Debug("subscribe", zap.Stringer("request", subscribeRequest))
+
+			agentService := &agent.Service{
+				Credentials: local.Extract(ctx.Context).Credentials(),
+			}
 
 			_, err = agentService.Subscribe(ctx.Context, subscribeRequest)
 

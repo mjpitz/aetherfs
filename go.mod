@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Depado/ginprom v1.7.3
-	github.com/coreos/go-oidc/v3 v3.1.0
+	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/gin-contrib/zap v0.0.2
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-git/go-billy/v5 v5.3.1
@@ -12,7 +12,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.1
 	github.com/minio/minio-go/v7 v7.0.18
-	github.com/mjpitz/myago v0.0.0-20211212010030-1c6f1fdc1541
+	github.com/mjpitz/myago v0.0.0-20211227070741-ea9567afbe0f
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.8.0
 	github.com/spf13/afero v1.6.0
@@ -30,18 +30,27 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.65.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/coreos/go-oidc/v3 v3.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/glog v1.0.0 // indirect
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.3 // indirect
+	github.com/google/flatbuffers v1.12.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
@@ -70,6 +79,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/willscott/go-nfs-client v0.0.0-20200605172546-271fa9065b33 // indirect
+	go.opencensus.io v0.22.5 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20211209193657-4570a0811e8b // indirect

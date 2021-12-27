@@ -28,11 +28,7 @@ type PushConfig struct {
 // Push returns a command used to push datasets to upstream servers.
 func Push() *cli.Command {
 	cfg := &PushConfig{
-		BlockSize: 256,
-	}
-
-	agentService := &agent.Service{
-		Authentications: &local.Authentications{},
+		BlockSize: 64,
 	}
 
 	return &cli.Command{
@@ -65,6 +61,10 @@ func Push() *cli.Command {
 			}
 
 			zaputil.Extract(ctx.Context).Debug("publish", zap.Stringer("request", publishRequest))
+
+			agentService := &agent.Service{
+				Credentials: local.Extract(ctx.Context).Credentials(),
+			}
 
 			_, err = agentService.Publish(ctx.Context, publishRequest)
 

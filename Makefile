@@ -96,6 +96,11 @@ dist: .dist
 	make legal
 	./scripts/dist-go.sh
 
+install:
+	./scripts/dist-web.sh
+	make legal
+	go install
+
 # useful shortcuts for release
 
 tag/release:

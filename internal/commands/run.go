@@ -102,9 +102,10 @@ func Run() (cmd *cli.Command) {
 			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
 
 			if cfg.Agent.Enable {
+
 				log.Info("enabling", zap.Strings("components", []string{"agent"}))
 				agentService := &agent.Service{
-					Authentications: &local.Authentications{},
+					Credentials: local.Extract(ctx.Context).Credentials(),
 				}
 
 				if cfg.Agent.Shutdown.Enable {

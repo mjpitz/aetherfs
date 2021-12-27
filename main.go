@@ -18,7 +18,9 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/mjpitz/aetherfs/internal/commands"
+	"github.com/mjpitz/aetherfs/internal/storage/local"
 	"github.com/mjpitz/myago/authors"
+	"github.com/mjpitz/myago/dirset"
 	"github.com/mjpitz/myago/flagset"
 	"github.com/mjpitz/myago/lifecycle"
 	"github.com/mjpitz/myago/zaputil"
@@ -33,8 +35,6 @@ var date = time.Now().Format(time.RFC3339)
 
 type GlobalConfig struct {
 	Log zaputil.Config `json:"log"`
-	//StateDir string        `json:"state_dir" usage:"location where AetherFS can write small amounts of data"`
-	//Config   string        `json:"config"    usage:"location of the command configuration file"`
 }
 
 func main() {
@@ -42,7 +42,6 @@ func main() {
 
 	cfg := &GlobalConfig{
 		Log: zaputil.DefaultConfig(),
-		//StateDir: "/usr/local/aetherfs",
 	}
 
 	app := &cli.App{
@@ -58,9 +57,15 @@ func main() {
 			commands.Version(),
 		},
 		Flags: flagset.Extract(cfg),
-		Before: func(ctx *cli.Context) error {
+		Before: func(ctx *cli.Context) (err error) {
 			ctx.Context = zaputil.Setup(ctx.Context, cfg.Log)
 			ctx.Context = lifecycle.Setup(ctx.Context)
+
+			dirs := dirset.Must("AetherFS")
+			ctx.Context, err = local.SetupDB(ctx.Context, dirs)
+			if err != nil {
+				return err
+			}
 
 			// special grpc things
 			logger := zaputil.Extract(ctx.Context)
@@ -75,6 +80,7 @@ func main() {
 		},
 		After: func(ctx *cli.Context) error {
 			lifecycle.Resolve(ctx.Context)
+			_ = local.Extract(ctx.Context).Close()
 
 			return nil
 		},

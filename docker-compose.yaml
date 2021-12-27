@@ -40,3 +40,9 @@ services:
     command:
       - run
       - --web_enable
+      - --tls_enable
+      - --tls_cert_path=/var/lib/aetherfs/conf
+      - --auth_type=basic
+      - --basic_password_file=/var/lib/aetherfs/conf/passwords.csv
+    volumes:
+      - ./deploy/docker-compose:/var/lib/aetherfs/conf:ro

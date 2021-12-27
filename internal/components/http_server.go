@@ -38,7 +38,6 @@ func ListenAndServeHTTP(ctx context.Context, cfg HTTPServerConfig, handler http.
 	handler = h2c.NewHandler(handler, &http2.Server{})
 
 	svr := &http.Server{
-		Addr:    fmt.Sprintf("0.0.0.0:%d", cfg.Port),
 		Handler: handler,
 		BaseContext: func(listener net.Listener) context.Context {
 			return ctx
@@ -50,8 +49,17 @@ func ListenAndServeHTTP(ctx context.Context, cfg HTTPServerConfig, handler http.
 		err = svr.Shutdown(ctx)
 	})
 
+	l, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Port))
+	if err != nil {
+		return err
+	}
+
+	if l != nil && tlsConfig != nil {
+		l = tls.NewListener(l, tlsConfig)
+	}
+
 	go func() {
-		_ = svr.ListenAndServe()
+		_ = svr.Serve(l)
 	}()
 
 	return nil

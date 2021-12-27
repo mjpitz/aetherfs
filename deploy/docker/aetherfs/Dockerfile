@@ -1,7 +1,7 @@
 # Copyright (C) The AetherFS Authors - All Rights Reserved
 # See LICENSE for more information.
 
-FROM alpine:3.12
+FROM alpine:3.14
 
 WORKDIR /opt/aetherfs
 RUN apk add -U tzdata ca-certificates

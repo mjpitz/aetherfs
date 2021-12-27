@@ -12,9 +12,15 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
 
+	"github.com/mjpitz/aetherfs/internal/storage/local"
+	"github.com/mjpitz/myago/auth"
+	basicauth "github.com/mjpitz/myago/auth/basic"
+	oidcauth "github.com/mjpitz/myago/auth/oidc"
 	"github.com/mjpitz/myago/lifecycle"
 	"github.com/mjpitz/myago/livetls"
 )
@@ -29,9 +35,15 @@ const defaultServiceConfig = `{
 type GRPCClientConfig struct {
 	Target string         `json:"target" usage:"address the grpc client should dial"`
 	TLS    livetls.Config `json:"tls"`
+
+	auth.Config
+	OIDC  oidcauth.Config        `json:"oidc"`
+	Basic basicauth.ClientConfig `json:"basic"`
 }
 
 func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, error) {
+	tokens := local.Extract(ctx).Tokens()
+
 	grpc_prometheus.EnableClientHandlingTimeHistogram()
 
 	backoff := grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond))
@@ -62,6 +74,34 @@ func GRPCClient(ctx context.Context, cfg GRPCClientConfig) (*grpc.ClientConn, er
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
+	}
+
+	var tokenSource oauth2.TokenSource
+
+	switch cfg.AuthType {
+	case "basic":
+		token, err := cfg.Basic.Token()
+		if err != nil {
+			return nil, err
+		}
+
+		tokenSource = oauth2.StaticTokenSource(token)
+	case "oidc":
+		token := &oauth2.Token{}
+		err := tokens.Get(ctx, cfg.Target, token)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenSource = oauth2.StaticTokenSource(token)
+	}
+
+	if tokenSource != nil {
+		opts = append(opts, grpc.WithPerRPCCredentials(
+			oauth.TokenSource{
+				TokenSource: tokenSource,
+			}),
+		)
 	}
 
 	cc, err := grpc.Dial(cfg.Target, opts...)
