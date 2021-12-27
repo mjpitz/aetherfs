@@ -22,7 +22,24 @@ download new or updated portions.
 
 ## Status
 
-This project is under active development. The lists below detail aspirational features and documentation.
+[![Latest Release][release-img]][release-link]
+[![License: AGPL-3.0][license-img]][license-link]
+[![Docker: ghcr.io/mjpitz/aetherfs][docker-img]][docker-link]
+![Platforms: linux/amd64 | linux/arm64 | osx/amd64 | osx/arm64 ][platform-img]
+
+[license-img]: https://img.shields.io/github/license/mjpitz/aetherfs?label=License&style=flat-square
+[license-link]: https://github.com/mjpitz/aetherfs/blob/main/LICENSE
+
+[release-img]: https://img.shields.io/github/v/tag/mjpitz/aetherfs?label=Release&style=flat-square
+[release-link]: https://github.com/mjpitz/aetherfs/releases/latest
+
+[docker-img]: https://img.shields.io/badge/Docker-ghcr.io%2Fmjpitz%2Faetherfs-blue?style=flat-square
+[docker-link]: https://github.com/mjpitz/aetherfs/pkgs/container/aetherfs
+
+[platform-img]: https://img.shields.io/badge/Platforms-linux%2Famd64%20%7C%20linux%2Farm64%20%7C%20osx%2Famd64%20%7C%20osx%2Farm64-lightgrey?style=flat-square
+
+This project is under active development. The lists below detail aspirational features and documentation. For a
+completed list of features, see the roadmap below. 
 
 - Documentation
   - [Architecture Document](https://github.com/mjpitz/aetherfs/wiki/Architecture)
@@ -30,7 +47,7 @@ This project is under active development. The lists below detail aspirational fe
 - Features
   - HTTP, WebDav, and NFS file server interfaces for ease of interaction
   - REST and gRPC APIs for programmatic interaction
-  - Optional agent that can manage a shared or FUSE file system
+  - Optional agent capabilities that allows it to run as a sidecar
   - Efficiently persist and query information stored in [AWS S3][]
   - Authenticate using common schemes (such as OIDC)
   - Enforce access control around datasets
@@ -55,15 +72,17 @@ As the second major release of the AetherFS system, this will include additional
 interaction for end users (provided there's interest in the system).
 
 - New Features
-  - [ ] Client Authentication
+  - [x] Client Authentication
+    - [x] Basic
+    - [x] OIDC
   - [x] Additional Interfaces
     - [x] WebDav
     - [x] NFSv3
-  - [ ]
 - Improvements
-  - [ ] Local data storage
+  - [x] Local data storage
+    - [x] Data encrypted at rest
   - [ ] Block caching
-  - [ ] Data encrypted in transit
+  - [x] Data encrypted in transit
 
 ### v21.10 - Released
 
@@ -79,7 +98,7 @@ This will be the initial release of AetherFS. It includes the "essentials".
 
 - New Features
   - [ ] Additional Interfaces
-    - [ ] FUSE
-  - [ ]
+  - [ ] Improvements
+    - [ ] Authentication for NFS
 - Improvements
-  - [ ]
+  - [ ] ?
