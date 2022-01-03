@@ -1,16 +1,16 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ .Values.kind }}
 metadata:
-  name: {{ include "aetherfs-hub.fullname" . }}
+  name: {{ include "aetherfs.fullname" . }}
   labels:
-    {{- include "aetherfs-hub.labels" . | nindent 4 }}
+    {{- include "aetherfs.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
+  {{- if eq .Values.kind "Deployment" | and (not .Values.autoscaling.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "aetherfs-hub.selectorLabels" . | nindent 6 }}
+      {{- include "aetherfs.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,15 +18,20 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "aetherfs-hub.labels" . | nindent 8 }}
+        {{- include "aetherfs.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "aetherfs-hub.serviceAccountName" . }}
+      serviceAccountName: {{ include "aetherfs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -35,25 +40,33 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - run
-            - --web_enable
-            {{- if .Values.nfs.enabled }}
-            - --nfs_enable
-            {{- end }}
-          {{- with .Values.env }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
+            - name: NFS_ENABLE
+              value: {{ .Values.service.nfs.enabled | ternary "true" "false" | quote }}
+            - name: WEB_ENABLE
+              value: {{ .Values.service.ui.enabled | ternary "true" "false" | quote }}
+          {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
-            {{- if .Values.nfs.enabled }}
+            {{- if .Values.service.nfs.enabled }}
             - name: nfs
               containerPort: 2049
               protocol: TCP
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -11,10 +11,6 @@ maintainers:
 version: "0.0.0"
 appVersion: "latest"
 dependencies:
-  - repository: file://../aetherfs-hub/
-    name: aetherfs-hub
-    version: "*"
-    condition: aetherfs-hub.enabled
   - repository: https://charts.dexidp.io
     name: dex
     version: 0.5.0

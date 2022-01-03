@@ -1,9 +1,9 @@
-# Default values for aetherfs-hub.
+# Default values for aetherfs.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- The number of instances to run.
-replicaCount: 1
+# -- How AetherFS should be deployed. Either as a Deployment or DaemonSet.
+kind: DaemonSet
 
 image:
   repository: ghcr.io/mjpitz/aetherfs
@@ -13,6 +13,18 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+# -- Additional storage volumes.
+volumes: []
+
+# -- Additional volume mounts.
+volumeMounts: []
+
+# -- Additional environment variables mounted from secrets.
+envFrom: []
+
+# -- Additional environment variables.
+env: []
 
 serviceAccount:
   # -- Specifies whether a service account should be created.
@@ -26,9 +38,14 @@ serviceAccount:
 # -- Annotations to provide directly to the pod.
 podAnnotations: {}
 
+# podDisruptionBudget: {}
+
 # -- The security context to provide to the pod.
 podSecurityContext: {}
   # fsGroup: 2000
+
+# -- Specify a priority class name to set pod priority.
+priorityClassName: ""
 
 # -- The security context to apply specifically the aetherfs-hub container.
 securityContext: {}
@@ -40,34 +57,30 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- Annotations to be added to the service.
+  annotations: {}
   # -- The type of service to create.
   type: ClusterIP
   # -- Request a specific service IP address for use in the cluster, or None for a headless mode.
   clusterIP: ""
-  # -- The port to advertise the service on.
-  port: 80
 
-ingress:
-  # -- Whether to enable an ingress address for the hub.
-  enabled: false
-  # -- Annotations to add to the ingress class.
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    -
-      # -- The name for the service.
-      host: chart-example.local
-      # -- What paths are exposed.
-      paths: []
-  # ingress.tls[0].secretName -- The name of the secret containing TLS certificates.
-  # ingress.tls[0].hosts -- A list of hosts the TLS certificate is valid for.
-  #
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-  #
-  tls: []
+  http:
+    # -- HTTP service port
+    port: 8080
+    # -- (int) http node port (when applicable)
+    nodePort:
+
+  nfs:
+    # -- Enable the AetherFS NFS server.
+    enabled: false
+    # -- NFS service port
+    port: 2049
+    # -- (int) NFS node port (when applicable)
+    nodePort:
+
+  ui:
+    # -- Enable the web UI.
+    enabled: false
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -102,9 +115,10 @@ tolerations: []
 # -- Provide scheduling preferences for pods when they are being considered for placement.
 affinity: {}
 
-# -- Specify environment variables used to configure other portions of the application.
-env: []
+dex:
+  # -- Weather dex is enabled for authentication.
+  enabled: false
 
-nfs:
-  # -- Deploys the nfs server.
+minio:
+  # -- Weather minio is enabled for storage.
   enabled: false

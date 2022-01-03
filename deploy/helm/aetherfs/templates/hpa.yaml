@@ -1,15 +1,15 @@
-{{- if .Values.autoscaling.enabled }}
+{{- if eq .Values.kind "Deployment" | and .Values.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "aetherfs-hub.fullname" . }}
+  name: {{ include "aetherfs.fullname" . }}
   labels:
-    {{- include "aetherfs-hub.labels" . | nindent 4 }}
+    {{- include "aetherfs.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "aetherfs-hub.fullname" . }}
+    name: {{ include "aetherfs.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

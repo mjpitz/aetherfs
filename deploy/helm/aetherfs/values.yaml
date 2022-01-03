@@ -1,66 +1,127 @@
-aetherfs-hub:
-  enabled: true
+# Default values for aetherfs.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 
-  fullnameOverride: "aetherfs-hub"
+# -- How AetherFS should be deployed. Either as a Deployment or DaemonSet.
+kind: Deployment
 
-  env:
-    - name: AUTH_TYPE
-      value: "oidc"
-    - name: OIDC_ISSUER_SERVER_URL
-      value: "http://dex:5556"
-    - name: STORAGE_DRIVER
-      value: "s3"
-    - name: STORAGE_S3_ENDPOINT
-      value: "minio:9000"
-    - name: STORAGE_S3_ACCESS_KEY_ID
-      value: "minioadmin"
-    - name: STORAGE_S3_SECRET_ACCESS_KEY
-      value: "minioadmin"
-    - name: STORAGE_S3_BUCKET
-      value: "aetherfs-data"
+# -- The number of instances to run.
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mjpitz/aetherfs
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Additional storage volumes.
+volumes: []
+
+# -- Additional volume mounts.
+volumeMounts: []
+
+# -- Additional environment variables mounted from secrets.
+envFrom: []
+
+# -- Additional environment variables.
+env: []
+
+serviceAccount:
+  # -- Specifies whether a service account should be created.
+  create: true
+  # -- Annotations to add to the service account.
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations to provide directly to the pod.
+podAnnotations: {}
+
+# podDisruptionBudget: {}
+
+# -- The security context to provide to the pod.
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- Specify a priority class name to set pod priority.
+priorityClassName: ""
+
+# -- The security context to apply specifically the aetherfs-hub container.
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  # -- Annotations to be added to the service.
+  annotations: {}
+  # -- The type of service to create.
+  type: ClusterIP
+  # -- Request a specific service IP address for use in the cluster, or None for a headless mode.
+  clusterIP: ""
+
+  http:
+    # -- HTTP service port
+    port: 8080
+    # -- (int) http node port (when applicable)
+    nodePort:
+
+  nfs:
+    # -- Enable the AetherFS NFS server.
+    enabled: false
+    # -- NFS service port
+    port: 2049
+    # -- (int) NFS node port (when applicable)
+    nodePort:
+
+  ui:
+    # -- Enable the web UI.
+    enabled: false
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  # -- Whether to enable autoscaling for this deployment.
+  enabled: false
+  # -- The minimum number of replicas to scale down to.
+  minReplicas: 1
+  # -- The maximum number of replicas to deploy.
+  maxReplicas: 100
+  # -- What CPU percentage we should scale up at.
+  targetCPUUtilizationPercentage: 80
+  # autoscaling.targetMemoryUtilizationPercentage -- What Memory percentage we should scale up at.
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Limit node selection to nodes with the matching set of labels.
+nodeSelector: {}
+
+# -- Configure rules that allow pods to run on tainted nodes. For example, running on control plane nodes.
+tolerations: []
+
+# -- Provide scheduling preferences for pods when they are being considered for placement.
+affinity: {}
 
 dex:
-  enabled: true
-
-  config:
-    issuer: http://localhost:5556
-
-    frontend:
-      issuer: AetherFS
-      theme: dark
-
-    storage:
-      type: sqlite3
-      config:
-        file: ":memory:"
-
-    connectors:
-      - id: mock
-        name: Example
-        type: mockCallback
-
-    staticClients:
-      - name: 'AetherFS'
-        id: 003645E5-3D41-4B6C-813B-74E422475BEE
-        secret: BEEF76F6-460A-4D39-B8C5-DFAF696A2AD8
-        redirectURIs:
-          - 'http://localhost:23843/callback'
-          - 'http://localhost:8080/ui/callback'
-
-    enablePasswordDB: true
-    staticPasswords:
-      - email: "admin@aetherfs.tech"
-        hash: "$2y$10$hldTTPzEsvVMcZlSx7KQIeOnu3LNqt6BZsNQaweul40i81o9KEKTW"
-        username: "admin"
-        userID: "430D8A58-53EF-4DD8-93F1-D818AC18010E"
+  # -- Weather dex is enabled for authentication.
+  enabled: false
 
 minio:
-  enabled: true
-
-  accessKey: "minioadmin"
-  secretKey: "minioadmin"
-
-  fullnameOverride: "minio"
-
-  persistence:
-    size: 20Gi
+  # -- Weather minio is enabled for storage.
+  enabled: false

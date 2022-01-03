@@ -48,7 +48,7 @@ To uninstall, simply remove the dependency and Helm should automatically clean i
 The following table lists the configurable parameters of the aetherfs-datasets chart and their default
 values.
 
-| Key        | Type   | Default | Description                            |
-| ---------- | ------ | ------- | -------------------------------------- |
-| nfs.port   | int    | `2049`  | The port the nfs server is bound to.   |
-| nfs.server | string | `""`    | The ip or dns name for the nfs server. |
+| Key        | Type   | Default       | Description                            |
+| ---------- | ------ | ------------- | -------------------------------------- |
+| nfs.port   | int    | `2049`        | The port the nfs server is bound to.   |
+| nfs.server | string | `"localhost"` | The ip or dns name for the nfs server. |
