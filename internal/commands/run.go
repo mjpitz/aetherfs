@@ -86,23 +86,24 @@ func Run() (cmd *cli.Command) {
 			blockAPI := blockv1.NewBlockAPIClient(serverConn)
 			datasetAPI := datasetv1.NewDatasetAPIClient(serverConn)
 
+			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
+			apiServer := runtime.NewServeMux()
+
 			stores, err := storage.ObtainStores(ctx.Context, cfg.Storage)
-			if err != nil {
+			switch {
+			case err != nil:
 				return err
+			case stores != nil:
+				// setup grpc
+				blockv1.RegisterBlockAPIServer(grpcServer, stores.BlockAPIServer)
+				datasetv1.RegisterDatasetAPIServer(grpcServer, stores.DatasetAPIServer)
+
+				// setup api routes
+				_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, serverConn)
+				_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
 			}
 
-			// setup grpc
-			grpcServer := components.GRPCServer(ctx.Context, cfg.GRPCServerConfig)
-			blockv1.RegisterBlockAPIServer(grpcServer, stores.BlockAPIServer)
-			datasetv1.RegisterDatasetAPIServer(grpcServer, stores.DatasetAPIServer)
-
-			// setup api routes
-			apiServer := runtime.NewServeMux()
-			_ = blockv1.RegisterBlockAPIHandler(ctx.Context, apiServer, serverConn)
-			_ = datasetv1.RegisterDatasetAPIHandler(ctx.Context, apiServer, serverConn)
-
 			if cfg.Agent.Enable {
-
 				log.Info("enabling", zap.Strings("components", []string{"agent"}))
 				agentService := &agent.Service{
 					Credentials: local.Extract(ctx.Context).Credentials(),
