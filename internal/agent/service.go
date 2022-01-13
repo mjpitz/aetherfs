@@ -17,9 +17,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/spf13/afero"
-	"github.com/zalando/go-keyring"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -63,7 +63,7 @@ func (s *Service) connectionFor(ctx context.Context, host string) (*grpc.ClientC
 
 	err := s.Credentials.Get(ctx, host, &cfg)
 	switch {
-	case errors.Is(err, keyring.ErrNotFound):
+	case errors.Is(err, badger.ErrKeyNotFound):
 		cfg = components.GRPCClientConfig{
 			Target: host,
 		}
@@ -295,6 +295,7 @@ func (s *Service) Publish(ctx context.Context, request *agentv1.PublishRequest) 
 	}
 
 	go func() {
+		// we need a new context here since returning cancels the ctx
 		_, err := s.publishAsync(ctx, request, tagsByHost)
 		if err != nil {
 			ctxzap.Extract(ctx).Error("failed to publish dataset", zap.Error(err))
@@ -482,6 +483,7 @@ func (s *Service) Subscribe(ctx context.Context, request *agentv1.SubscribeReque
 
 	} else {
 		go func() {
+			// we need a new context here since returning cancels the ctx
 			err := s.subscribeAsync(ctx, tagsByHost, aetherFSDir, resp)
 			if err != nil {
 				ctxzap.Extract(ctx).Error("failed to publish dataset", zap.Error(err))
