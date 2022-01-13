@@ -67,11 +67,19 @@ service:
   # -- Request a specific service IP address for use in the cluster, or None for a headless mode.
   clusterIP: ""
 
+  topologyConstraints:
+    # -- Enable topology based networking constraints.
+    enabled: false
+    # -- Customize the node-label keys used to route service communication.
+    keys: []
+
   http:
     # -- HTTP service port
     port: 8080
-    # -- (int) http node port (when applicable)
+    # -- (int) HTTP node port (when applicable)
     nodePort:
+    # -- (int) HTTP host port (when applicable)
+    hostPort:
 
   nfs:
     # -- Enable the AetherFS NFS server.
@@ -80,6 +88,8 @@ service:
     port: 2049
     # -- (int) NFS node port (when applicable)
     nodePort:
+    # -- (int) NFS host port (when applicable)
+    hostPort:
 
   ui:
     # -- Enable the web UI.

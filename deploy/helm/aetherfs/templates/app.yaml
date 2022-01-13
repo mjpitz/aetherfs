@@ -56,10 +56,16 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+              {{- if .Values.service.http.hostPort }}
+              hostPort: {{ .Values.service.http.hostPort }}
+              {{- end }}
             {{- if .Values.service.nfs.enabled }}
             - name: nfs
               containerPort: 2049
               protocol: TCP
+              {{- if .Values.service.nfs.hostPort }}
+              hostPort: {{ .Values.service.nfs.hostPort }}
+              {{- end }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

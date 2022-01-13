@@ -13,7 +13,7 @@ spec:
   nfs:
     path: /mount
     server: {{ .Values.nfs.server }}
-    readOnly: true
+    readOnly: {{ .Values.readonly }}
   mountOptions:
     - port={{ .Values.nfs.port }}
     - mountport={{ .Values.nfs.port }}

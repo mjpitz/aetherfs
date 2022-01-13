@@ -32,3 +32,15 @@ spec:
     {{- end }}
   selector:
     {{- include "aetherfs.selectorLabels" . | nindent 4 }}
+  {{- if .Values.service.topologyConstraints.enabled }}
+  topologyKeys:
+    {{- if .Values.service.topologyConstraints.keys }}
+    {{- .Values.service.topologyConstraints.keys | toYaml | nindent 4 }}
+    {{- else if .Values.kind | eq "DaemonSet" }}
+    - kubernetes.io/hostname
+    {{- else }}
+    - kubernetes.io/hostname
+    - topology.kubernetes.io/zone
+    - topology.kubernetes.io/region
+    {{- end }}
+  {{- end }}

@@ -3,3 +3,5 @@ nfs:
   server: localhost
   # -- The port the nfs server is bound to.
   port: 2049
+
+readonly: true
